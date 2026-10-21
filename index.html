@@ -1,0 +1,2491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="Lift Log — Strength training companion">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Lift Log</title>
+<style>
+/* ===== CSS RESET & BASE ===== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#0d0d14;--bg2:#151521;--bg3:#1c1c2e;--bg4:#24243a;
+--text:#e8e8f0;--text2:#a0a0b8;--text3:#6a6a82;
+--accent:#6c63ff;--accent2:#8b83ff;--accent-dim:rgba(108,99,255,0.15);
+--success:#4ade80;--warning:#fbbf24;--danger:#f87171;
+--radius:12px;--radius-sm:8px;
+--shadow:0 2px 8px rgba(0,0,0,0.3);
+--font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+--safe-bottom:env(safe-area-inset-bottom,0px);
+}
+html{font-size:16px;-webkit-text-size-adjust:100%}
+body{
+font-family:var(--font);background:var(--bg);color:var(--text);
+line-height:1.5;overflow-x:hidden;min-height:100vh;
+min-height:100dvh;position:relative;
+-webkit-tap-highlight-color:transparent;
+}
+input,button,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none;-webkit-appearance:none}
+input{-webkit-appearance:none;appearance:none}
+a{color:var(--accent);text-decoration:none}
+
+/* ===== LAYOUT ===== */
+#app{
+display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;
+padding-bottom:calc(60px + var(--safe-bottom));
+}
+.page{display:none;flex:1;padding:16px;padding-top:8px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.page.active{display:flex;flex-direction:column}
+.page-title{font-size:1.5rem;font-weight:700;margin:8px 0 16px;letter-spacing:-0.02em}
+.page-subtitle{font-size:1.1rem;font-weight:600;margin:16px 0 8px;color:var(--text)}
+
+/* ===== BOTTOM NAV ===== */
+#bottomNav{
+position:fixed;bottom:0;left:0;right:0;
+background:var(--bg2);border-top:1px solid var(--bg4);
+display:flex;justify-content:space-around;align-items:center;
+height:calc(60px + var(--safe-bottom));
+padding-bottom:var(--safe-bottom);z-index:100;
+}
+.nav-btn{
+display:flex;flex-direction:column;align-items:center;gap:2px;
+padding:8px 4px;min-width:56px;color:var(--text3);
+font-size:0.65rem;font-weight:500;transition:color 0.2s;
+}
+.nav-btn.active{color:var(--accent)}
+.nav-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav-btn .badge{
+position:absolute;top:4px;right:50%;transform:translateX(16px);
+background:var(--accent);color:#fff;font-size:0.55rem;
+width:16px;height:16px;border-radius:50%;display:flex;
+align-items:center;justify-content:center;font-weight:700;
+}
+
+/* ===== CARDS ===== */
+.card{
+background:var(--bg2);border-radius:var(--radius);padding:16px;
+margin-bottom:12px;border:1px solid var(--bg4);
+}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.card-title{font-size:0.95rem;font-weight:600}
+.card-subtitle{font-size:0.8rem;color:var(--text2)}
+
+/* ===== BUTTONS ===== */
+.btn{
+display:inline-flex;align-items:center;justify-content:center;gap:6px;
+padding:12px 20px;border-radius:var(--radius-sm);font-weight:600;
+font-size:0.9rem;transition:all 0.15s;white-space:nowrap;
+}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:active{background:var(--accent2);transform:scale(0.97)}
+.btn-secondary{background:var(--bg3);color:var(--text)}
+.btn-secondary:active{background:var(--bg4)}
+.btn-danger{background:rgba(248,113,113,0.15);color:var(--danger)}
+.btn-ghost{color:var(--text2);padding:8px 12px}
+.btn-sm{padding:8px 14px;font-size:0.8rem}
+.btn-full{width:100%}
+.btn-icon{width:40px;height:40px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.btn-icon svg{width:20px;height:20px}
+
+/* ===== FORMS ===== */
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:0.8rem;color:var(--text2);margin-bottom:6px;font-weight:500}
+.form-input{
+width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--bg4);
+border-radius:var(--radius-sm);color:var(--text);font-size:0.95rem;
+outline:none;transition:border-color 0.2s;
+}
+.form-input:focus{border-color:var(--accent)}
+.form-input::placeholder{color:var(--text3)}
+select.form-input{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236a6a82' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.form-row{display:flex;gap:12px}
+.form-row .form-group{flex:1}
+.form-check{display:flex;align-items:center;gap:10px;padding:8px 0}
+.form-check input[type="checkbox"]{
+width:20px;height:20px;accent-color:var(--accent);
+background:var(--bg3);border-radius:4px;
+}
+
+/* ===== TEMPLATE CARDS ===== */
+.template-card{
+background:var(--bg2);border-radius:var(--radius);padding:14px 16px;
+margin-bottom:10px;border:1px solid var(--bg4);
+display:flex;align-items:center;gap:14px;
+transition:background 0.15s;position:relative;overflow:hidden;
+}
+.template-card:active{background:var(--bg3)}
+.template-icon{
+width:42px;height:42px;border-radius:10px;
+display:flex;align-items:center;justify-content:center;
+font-size:1.2rem;flex-shrink:0;
+}
+.template-info{flex:1;min-width:0}
+.template-name{font-weight:600;font-size:0.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.template-meta{font-size:0.78rem;color:var(--text2);margin-top:2px}
+.template-action{color:var(--text3);flex-shrink:0}
+.template-action svg{width:18px;height:18px}
+
+/* Day color coding */
+.day-upper-a{background:linear-gradient(135deg,rgba(108,99,255,0.2),rgba(108,99,255,0.05))}
+.day-lower-a{background:linear-gradient(135deg,rgba(74,222,128,0.2),rgba(74,222,128,0.05))}
+.day-upper-b{background:linear-gradient(135deg,rgba(251,191,36,0.2),rgba(251,191,36,0.05))}
+.day-lower-b{background:linear-gradient(135deg,rgba(248,113,113,0.2),rgba(248,113,113,0.05))}
+
+/* ===== WORKOUT SCREEN ===== */
+.workout-header{
+position:sticky;top:0;background:var(--bg);z-index:50;
+padding:8px 0 12px;border-bottom:1px solid var(--bg4);margin:0 -16px;padding:8px 16px 12px;
+}
+.workout-header-top{display:flex;justify-content:space-between;align-items:center}
+.workout-timer{
+font-size:0.8rem;color:var(--accent);font-weight:600;
+font-variant-numeric:tabular-nums;
+}
+.exercise-block{margin:16px 0}
+.exercise-header{
+display:flex;justify-content:space-between;align-items:flex-start;
+margin-bottom:8px;gap:8px;
+}
+.exercise-name{font-weight:600;font-size:0.95rem;flex:1}
+.exercise-meta{font-size:0.75rem;color:var(--text2)}
+.exercise-prev{font-size:0.75rem;color:var(--text3);margin-bottom:10px;font-style:italic}
+
+/* Set rows */
+.set-table{width:100%}
+.set-row{
+display:grid;grid-template-columns:36px 1fr 1fr 1fr 44px;
+gap:6px;align-items:center;padding:6px 0;
+border-bottom:1px solid var(--bg3);
+}
+.set-row.warmup{opacity:0.65}
+.set-row-header{font-size:0.7rem;color:var(--text3);font-weight:600;text-transform:uppercase;padding:4px 0;border:none}
+.set-num{
+font-size:0.8rem;font-weight:600;color:var(--text2);
+text-align:center;
+}
+.set-num.warmup-label{color:var(--warning);font-size:0.7rem}
+.set-input{
+width:100%;padding:8px 4px;background:var(--bg3);border:1px solid transparent;
+border-radius:6px;color:var(--text);font-size:0.9rem;text-align:center;
+font-variant-numeric:tabular-nums;outline:none;
+}
+.set-input:focus{border-color:var(--accent);background:var(--bg4)}
+.set-input.filled{background:var(--accent-dim);border-color:rgba(108,99,255,0.3)}
+.set-target{font-size:0.75rem;color:var(--text3);text-align:center}
+.set-check{
+width:36px;height:36px;border-radius:8px;
+display:flex;align-items:center;justify-content:center;
+background:var(--bg3);color:var(--text3);transition:all 0.15s;
+}
+.set-check.done{background:var(--success);color:#000}
+.set-check svg{width:18px;height:18px;stroke-width:2.5}
+
+/* Rest timer */
+.rest-timer-bar{
+position:fixed;bottom:calc(60px + var(--safe-bottom));left:0;right:0;
+background:var(--bg2);border-top:1px solid var(--bg4);
+padding:10px 16px;display:none;z-index:90;
+align-items:center;gap:12px;
+}
+.rest-timer-bar.visible{display:flex}
+.rest-timer-display{
+font-size:1.4rem;font-weight:700;font-variant-numeric:tabular-nums;
+color:var(--accent);min-width:70px;text-align:center;
+}
+.rest-timer-label{font-size:0.75rem;color:var(--text2);flex:1}
+.rest-timer-btns{display:flex;gap:6px}
+.rest-progress{
+position:absolute;bottom:0;left:0;height:3px;
+background:var(--accent);transition:width 0.5s linear;
+}
+
+/* ===== HISTORY ===== */
+.history-item{
+background:var(--bg2);border-radius:var(--radius);padding:14px 16px;
+margin-bottom:8px;border:1px solid var(--bg4);
+}
+.history-date{font-size:0.75rem;color:var(--text2);margin-bottom:4px}
+.history-name{font-weight:600;font-size:0.92rem;margin-bottom:4px}
+.history-stats{display:flex;gap:16px;font-size:0.78rem;color:var(--text2)}
+.history-stat{display:flex;align-items:center;gap:4px}
+
+/* ===== PROGRESS/CHARTS ===== */
+.chart-container{
+background:var(--bg2);border-radius:var(--radius);padding:16px;
+margin-bottom:12px;border:1px solid var(--bg4);
+}
+.chart-title{font-size:0.85rem;font-weight:600;margin-bottom:12px}
+.chart-svg{width:100%;height:200px}
+.chart-empty{
+height:200px;display:flex;align-items:center;justify-content:center;
+color:var(--text3);font-size:0.85rem;text-align:center;
+}
+.pr-card{
+display:flex;align-items:center;gap:12px;padding:12px;
+background:var(--bg3);border-radius:var(--radius-sm);margin-bottom:8px;
+}
+.pr-icon{font-size:1.3rem}
+.pr-info{flex:1}
+.pr-exercise{font-weight:600;font-size:0.85rem}
+.pr-detail{font-size:0.78rem;color:var(--text2)}
+.pr-value{font-weight:700;font-size:1rem;color:var(--accent)}
+
+/* ===== SETTINGS ===== */
+.settings-group{margin-bottom:24px}
+.settings-title{font-size:0.8rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;font-weight:600}
+.settings-item{
+display:flex;justify-content:space-between;align-items:center;
+padding:14px 16px;background:var(--bg2);border:1px solid var(--bg4);
+margin-bottom:-1px;
+}
+.settings-item:first-of-type{border-radius:var(--radius) var(--radius) 0 0}
+.settings-item:last-of-type{border-radius:0 0 var(--radius) var(--radius);margin-bottom:0}
+.settings-item:only-of-type{border-radius:var(--radius)}
+.settings-item-label{font-size:0.9rem}
+.settings-item-value{font-size:0.85rem;color:var(--text2)}
+
+/* Toggle */
+.toggle{
+position:relative;width:48px;height:28px;
+background:var(--bg4);border-radius:14px;transition:background 0.2s;
+}
+.toggle.on{background:var(--accent)}
+.toggle::after{
+content:'';position:absolute;top:3px;left:3px;
+width:22px;height:22px;border-radius:50%;
+background:#fff;transition:transform 0.2s;
+}
+.toggle.on::after{transform:translateX(20px)}
+
+/* ===== MODAL ===== */
+.modal-overlay{
+position:fixed;inset:0;background:rgba(0,0,0,0.7);
+z-index:200;display:none;align-items:flex-end;justify-content:center;
+}
+.modal-overlay.visible{display:flex}
+.modal{
+background:var(--bg2);border-radius:var(--radius) var(--radius) 0 0;
+width:100%;max-width:500px;max-height:85vh;overflow-y:auto;
+padding:20px 16px calc(20px + var(--safe-bottom));
+animation:slideUp 0.25s ease-out;
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-center{
+border-radius:var(--radius);align-self:center;
+max-height:80vh;animation:fadeIn 0.2s;
+}
+@keyframes fadeIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
+.modal-title{font-size:1.1rem;font-weight:700;margin-bottom:16px}
+.modal-actions{display:flex;gap:10px;margin-top:20px}
+.modal-actions .btn{flex:1}
+
+/* ===== TOAST ===== */
+.toast-container{
+position:fixed;top:16px;left:16px;right:16px;z-index:300;
+display:flex;flex-direction:column;gap:8px;pointer-events:none;
+}
+.toast{
+background:var(--bg3);border:1px solid var(--bg4);border-radius:var(--radius-sm);
+padding:12px 16px;font-size:0.85rem;color:var(--text);
+box-shadow:var(--shadow);animation:toastIn 0.3s ease-out;
+pointer-events:auto;
+}
+.toast.success{border-left:3px solid var(--success)}
+.toast.error{border-left:3px solid var(--danger)}
+.toast.info{border-left:3px solid var(--accent)}
+@keyframes toastIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== EMPTY STATES ===== */
+.empty-state{
+display:flex;flex-direction:column;align-items:center;justify-content:center;
+padding:40px 20px;color:var(--text3);text-align:center;
+}
+.empty-state svg{width:48px;height:48px;margin-bottom:12px;opacity:0.4}
+.empty-state p{font-size:0.9rem;margin-bottom:4px}
+
+/* ===== REC CARD ===== */
+.rec-card{
+background:linear-gradient(135deg,rgba(108,99,255,0.1),rgba(108,99,255,0.02));
+border:1px solid rgba(108,99,255,0.25);border-radius:var(--radius);
+padding:14px 16px;margin-bottom:12px;
+}
+.rec-card .rec-title{font-weight:600;font-size:0.88rem;margin-bottom:6px;color:var(--accent2)}
+.rec-card .rec-body{font-size:0.82rem;color:var(--text2);margin-bottom:10px;line-height:1.5}
+.rec-card .rec-actions{display:flex;gap:8px}
+
+/* ===== MISC ===== */
+.divider{height:1px;background:var(--bg4);margin:16px 0}
+.chip{
+display:inline-flex;padding:4px 10px;border-radius:20px;
+font-size:0.75rem;font-weight:500;background:var(--bg3);color:var(--text2);
+}
+.chip.active{background:var(--accent-dim);color:var(--accent)}
+.chip-group{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.stat-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bg3)}
+.stat-label{color:var(--text2);font-size:0.85rem}
+.stat-value{font-weight:600;font-size:0.85rem}
+.flex-between{display:flex;justify-content:space-between;align-items:center}
+.gap-8{gap:8px}
+.mt-8{margin-top:8px}
+.mt-16{margin-top:16px}
+.mb-8{margin-bottom:8px}
+.mb-16{margin-bottom:16px}
+.text-sm{font-size:0.8rem}
+.text-muted{color:var(--text2)}
+.text-accent{color:var(--accent)}
+.text-success{color:var(--success)}
+.text-warning{color:var(--warning)}
+.text-danger{color:var(--danger)}
+.fw-600{font-weight:600}
+.hidden{display:none!important}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:2px}
+
+/* ===== ONBOARDING ===== */
+.onboarding-step{display:none}
+.onboarding-step.active{display:block}
+.onboarding-option{
+display:flex;align-items:center;gap:12px;padding:14px 16px;
+background:var(--bg3);border:2px solid transparent;border-radius:var(--radius-sm);
+margin-bottom:8px;cursor:pointer;transition:all 0.15s;
+}
+.onboarding-option.selected{border-color:var(--accent);background:var(--accent-dim)}
+.onboarding-option-icon{font-size:1.3rem}
+.onboarding-option-text{flex:1}
+.onboarding-option-title{font-weight:600;font-size:0.9rem}
+.onboarding-option-desc{font-size:0.78rem;color:var(--text2);margin-top:2px}
+
+/* ===== EXERCISE PICKER ===== */
+.exercise-pick-item{
+display:flex;align-items:center;gap:12px;padding:12px;
+background:var(--bg3);border-radius:var(--radius-sm);margin-bottom:6px;
+cursor:pointer;
+}
+.exercise-pick-item:active{background:var(--bg4)}
+.exercise-pick-muscles{font-size:0.75rem;color:var(--text3)}
+
+/* ===== VOLUME BARS ===== */
+.volume-bar-container{margin-bottom:10px}
+.volume-bar-label{display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:4px}
+.volume-bar-track{height:8px;background:var(--bg4);border-radius:4px;overflow:hidden}
+.volume-bar-fill{height:100%;border-radius:4px;transition:width 0.3s}
+
+/* ===== EXERCISE DETAIL IN WORKOUT ===== */
+.ex-actions{display:flex;gap:6px;flex-shrink:0}
+
+/* Tab navigation for progress */
+.tab-bar{display:flex;gap:4px;margin-bottom:16px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+.tab-bar::-webkit-scrollbar{display:none}
+.tab-btn{
+padding:8px 16px;border-radius:20px;font-size:0.8rem;font-weight:500;
+white-space:nowrap;background:var(--bg3);color:var(--text2);
+flex-shrink:0;transition:all 0.15s;
+}
+.tab-btn.active{background:var(--accent);color:#fff}
+
+/* ===== RESPONSIVE ===== */
+@media(min-width:400px){
+.set-row{grid-template-columns:40px 1fr 1fr 1fr 48px;gap:8px}
+}
+@media(max-width:340px){
+.set-row{grid-template-columns:30px 1fr 1fr 1fr 38px;gap:4px}
+.set-input{font-size:0.82rem;padding:6px 2px}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+<!-- ===== HOME PAGE ===== -->
+<div id="page-home" class="page active">
+<div class="flex-between mb-16">
+<div>
+<div class="text-sm text-muted" id="homeGreeting">Good morning</div>
+<h1 class="page-title" style="margin:0">Lift Log</h1>
+</div>
+<div id="homeActiveIndicator" class="hidden">
+<button class="btn btn-sm btn-primary" onclick="resumeWorkout()">Resume ▶</button>
+</div>
+</div>
+
+<button class="btn btn-primary btn-full mb-16" onclick="showStartWorkoutModal()" style="padding:16px;font-size:1rem">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16"/></svg>
+Start Workout
+</button>
+
+<div id="homeNextSession" class="card hidden">
+<div class="card-subtitle">Suggested next</div>
+<div class="card-title" id="homeNextName"></div>
+</div>
+
+<div id="homeLastWorkout" class="card hidden">
+<div class="card-subtitle">Last workout</div>
+<div class="card-title" id="homeLastName"></div>
+<div class="text-sm text-muted" id="homeLastDate"></div>
+<div class="text-sm text-muted" id="homeLastStats"></div>
+</div>
+
+<div id="homeRec" class="hidden"></div>
+
+<div id="homePRs" class="hidden">
+<h3 class="page-subtitle">Recent PRs</h3>
+<div id="homePRList"></div>
+</div>
+</div>
+
+<!-- ===== WORKOUTS PAGE ===== -->
+<div id="page-workouts" class="page">
+<h1 class="page-title">Workouts</h1>
+<div id="templateList"></div>
+<button class="btn btn-secondary btn-full mt-16" onclick="showCreateTemplateModal()">
++ Create Template
+</button>
+</div>
+
+<!-- ===== ACTIVE WORKOUT PAGE ===== -->
+<div id="page-active" class="page">
+<div class="workout-header">
+<div class="workout-header-top">
+<div>
+<div class="card-title" id="activeWorkoutName">Workout</div>
+<div class="workout-timer" id="activeElapsedTimer">00:00</div>
+</div>
+<div style="display:flex;gap:8px">
+<button class="btn btn-sm btn-secondary" onclick="addExerciseToActive()">+ Exercise</button>
+<button class="btn btn-sm btn-primary" onclick="finishWorkout()">Finish</button>
+</div>
+</div>
+</div>
+<div id="activeExercises"></div>
+<div style="height:80px"></div>
+</div>
+
+<!-- ===== HISTORY PAGE ===== -->
+<div id="page-history" class="page">
+<h1 class="page-title">History</h1>
+<div id="historyList"></div>
+<div id="historyEmpty" class="empty-state hidden">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+<p>No workouts yet</p>
+<p class="text-sm">Complete a workout to see it here</p>
+</div>
+</div>
+
+<!-- ===== PROGRESS PAGE ===== -->
+<div id="page-progress" class="page">
+<h1 class="page-title">Progress</h1>
+<div class="tab-bar" id="progressTabs">
+<button class="tab-btn active" onclick="showProgressTab('overview')">Overview</button>
+<button class="tab-btn" onclick="showProgressTab('exercises')">Exercises</button>
+<button class="tab-btn" onclick="showProgressTab('volume')">Volume</button>
+<button class="tab-btn" onclick="showProgressTab('records')">Records</button>
+</div>
+<div id="progressContent"></div>
+</div>
+
+<!-- ===== SETTINGS PAGE ===== -->
+<div id="page-settings" class="page">
+<h1 class="page-title">Settings</h1>
+
+<div class="settings-group">
+<div class="settings-title">Preferences</div>
+<div class="settings-item" onclick="toggleUnit()">
+<span class="settings-item-label">Weight unit</span>
+<span class="settings-item-value" id="settingUnit">kg</span>
+</div>
+<div class="settings-item" onclick="toggleRec()">
+<span class="settings-item-label">Progression recommendations</span>
+<div class="toggle" id="settingRecToggle"></div>
+</div>
+</div>
+
+<div class="settings-group">
+<div class="settings-title">Data</div>
+<div class="settings-item" onclick="exportBackup()">
+<span class="settings-item-label">Export backup (JSON)</span>
+<span class="settings-item-value">→</span>
+</div>
+<div class="settings-item" onclick="exportCSV()">
+<span class="settings-item-label">Export history (CSV)</span>
+<span class="settings-item-value">→</span>
+</div>
+<div class="settings-item" onclick="document.getElementById('importFile').click()">
+<span class="settings-item-label">Import backup</span>
+<span class="settings-item-value">→</span>
+</div>
+<input type="file" id="importFile" accept=".json" style="display:none" onchange="importBackup(event)">
+</div>
+
+<div class="settings-group">
+<div class="settings-title">Exercises</div>
+<div class="settings-item" onclick="showExerciseLibrary()">
+<span class="settings-item-label">Exercise library</span>
+<span class="settings-item-value" id="settingExCount">0 exercises</span>
+</div>
+</div>
+
+<div class="settings-group">
+<div class="settings-title">About</div>
+<div class="settings-item">
+<span class="settings-item-label">Lift Log</span>
+<span class="settings-item-value">v1.0</span>
+</div>
+<div class="settings-item">
+<span class="settings-item-label">Storage</span>
+<span class="settings-item-value">Local (IndexedDB)</span>
+</div>
+</div>
+
+<div class="card mt-16" style="background:var(--bg3)">
+<p class="text-sm text-muted">
+⚠️ Your data is stored locally in this browser. Browser storage can be cleared or evicted.
+Please export backups regularly. This app does not transmit data externally.
+</p>
+</div>
+
+<button class="btn btn-danger btn-full mt-16" onclick="confirmClearData()">
+Clear All Data
+</button>
+</div>
+</div>
+
+<!-- ===== BOTTOM NAVIGATION ===== -->
+<nav id="bottomNav">
+<button class="nav-btn active" onclick="navigate('home')" data-page="home">
+<svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+<span>Home</span>
+</button>
+<button class="nav-btn" onclick="navigate('workouts')" data-page="workouts">
+<svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="10" rx="1"/><line x1="7" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="17" y2="20"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+<span>Workouts</span>
+</button>
+<button class="nav-btn" onclick="navigate('history')" data-page="history">
+<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+<span>History</span>
+</button>
+<button class="nav-btn" onclick="navigate('progress')" data-page="progress">
+<svg viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+<span>Progress</span>
+</button>
+<button class="nav-btn" onclick="navigate('settings')" data-page="settings">
+<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+<span>Settings</span>
+</button>
+</nav>
+
+<!-- ===== REST TIMER BAR ===== -->
+<div id="restTimerBar" class="rest-timer-bar">
+<div>
+<div class="rest-timer-label">Rest Timer</div>
+<div class="rest-timer-display" id="restTimerDisplay">0:00</div>
+</div>
+<div class="rest-timer-btns">
+<button class="btn btn-sm btn-secondary" onclick="adjustRestTimer(-15)">-15s</button>
+<button class="btn btn-sm btn-secondary" onclick="adjustRestTimer(15)">+15s</button>
+<button class="btn btn-sm btn-secondary" id="restTimerPauseBtn" onclick="toggleRestTimer()">⏸</button>
+<button class="btn btn-sm btn-ghost" onclick="dismissRestTimer()">✕</button>
+</div>
+<div class="rest-progress" id="restProgress"></div>
+</div>
+
+<!-- ===== MODAL CONTAINER ===== -->
+<div id="modalOverlay" class="modal-overlay" onclick="closeModalOverlay(event)">
+<div class="modal" id="modalContent" onclick="event.stopPropagation()"></div>
+</div>
+
+<!-- ===== TOAST CONTAINER ===== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ============================================================
+// LIFT LOG — COMPLETE APPLICATION
+// ============================================================
+
+// ===== DATABASE =====
+const DB_NAME = 'LiftLogDB';
+const DB_VERSION = 3;
+let db = null;
+
+function openDB() {
+return new Promise((resolve, reject) => {
+const req = indexedDB.open(DB_NAME, DB_VERSION);
+req.onupgradeneeded = (e) => {
+const d = e.target.result;
+if (!d.objectStoreNames.contains('exercises')) {
+const es = d.createObjectStore('exercises', { keyPath: 'id' });
+es.createIndex('muscleGroup', 'muscleGroup', { unique: false });
+}
+if (!d.objectStoreNames.contains('templates')) {
+d.createObjectStore('templates', { keyPath: 'id' });
+}
+if (!d.objectStoreNames.contains('sessions')) {
+const ss = d.createObjectStore('sessions', { keyPath: 'id' });
+ss.createIndex('date', 'date', { unique: false });
+ss.createIndex('status', 'status', { unique: false });
+}
+if (!d.objectStoreNames.contains('preferences')) {
+d.createObjectStore('preferences', { keyPath: 'key' });
+}
+if (!d.objectStoreNames.contains('recommendations')) {
+const rs = d.createObjectStore('recommendations', { keyPath: 'id' });
+rs.createIndex('exerciseId', 'exerciseId', { unique: false });
+}
+};
+req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+req.onerror = (e) => reject(e.target.error);
+});
+}
+
+function dbPut(store, data) {
+return new Promise((resolve, reject) => {
+const tx = db.transaction(store, 'readwrite');
+tx.objectStore(store).put(data);
+tx.oncomplete = () => resolve();
+tx.onerror = (e) => reject(e.target.error);
+});
+}
+
+function dbGet(store, key) {
+return new Promise((resolve, reject) => {
+const tx = db.transaction(store, 'readonly');
+const req = tx.objectStore(store).get(key);
+req.onsuccess = () => resolve(req.result);
+req.onerror = (e) => reject(e.target.error);
+});
+}
+
+function dbGetAll(store) {
+return new Promise((resolve, reject) => {
+const tx = db.transaction(store, 'readonly');
+const req = tx.objectStore(store).getAll();
+req.onsuccess = () => resolve(req.result || []);
+req.onerror = (e) => reject(e.target.error);
+});
+}
+
+function dbDelete(store, key) {
+return new Promise((resolve, reject) => {
+const tx = db.transaction(store, 'readwrite');
+tx.objectStore(store).delete(key);
+tx.oncomplete = () => resolve();
+tx.onerror = (e) => reject(e.target.error);
+});
+}
+
+function dbClear(store) {
+return new Promise((resolve, reject) => {
+const tx = db.transaction(store, 'readwrite');
+tx.objectStore(store).clear();
+tx.oncomplete = () => resolve();
+tx.onerror = (e) => reject(e.target.error);
+});
+}
+
+// ===== UTILITIES =====
+function uid() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 9); }
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+function roundWeight(w, unit) {
+const step = unit === 'lb' ? 5 : 2.5;
+return Math.round(w / step) * step;
+}
+function formatDuration(ms) {
+const s = Math.floor(ms / 1000);
+const m = Math.floor(s / 60);
+const h = Math.floor(m / 60);
+if (h > 0) return `${h}h ${m % 60}m`;
+return `${m}m ${s % 60}s`;
+}
+function formatDate(d) {
+const dt = new Date(d);
+return dt.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+}
+function formatDateFull(d) {
+const dt = new Date(d);
+return dt.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+}
+function epley1RM(w, r) {
+if (r <= 0 || w <= 0) return 0;
+if (r === 1) return w;
+return w * (1 + r / 30);
+}
+function getGreeting() {
+const h = new Date().getHours();
+if (h < 12) return 'Good morning';
+if (h < 17) return 'Good afternoon';
+return 'Good evening';
+}
+
+// ===== PREFERENCES =====
+let prefs = { unit: 'kg', recsEnabled: true, onboardingDone: false, equipment: 'gym' };
+
+async function loadPrefs() {
+const p = await dbGet('preferences', 'main');
+if (p) prefs = { ...prefs, ...p.value };
+}
+
+async function savePrefs() {
+await dbPut('preferences', { key: 'main', value: prefs });
+}
+
+// ===== TOAST =====
+function toast(msg, type = 'info') {
+const c = document.getElementById('toastContainer');
+const t = document.createElement('div');
+t.className = `toast ${type}`;
+t.textContent = msg;
+c.appendChild(t);
+setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(() => t.remove(), 300); }, 3000);
+}
+
+// ===== NAVIGATION =====
+let currentPage = 'home';
+
+function navigate(page) {
+document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+const pageEl = document.getElementById('page-' + page);
+if (pageEl) { pageEl.classList.add('active'); pageEl.scrollTop = 0; }
+
+const navBtn = document.querySelector(`.nav-btn[data-page="${page}"]`);
+if (navBtn) navBtn.classList.add('active');
+
+currentPage = page;
+
+if (page === 'home') refreshHome();
+else if (page === 'workouts') refreshTemplates();
+else if (page === 'history') refreshHistory();
+else if (page === 'progress') refreshProgress();
+else if (page === 'settings') refreshSettings();
+}
+
+// ===== MODAL =====
+function showModal(html, center = false) {
+const overlay = document.getElementById('modalOverlay');
+const content = document.getElementById('modalContent');
+content.innerHTML = html;
+content.className = 'modal' + (center ? ' modal-center' : '');
+overlay.classList.add('visible');
+}
+
+function closeModal() {
+document.getElementById('modalOverlay').classList.remove('visible');
+}
+
+function closeModalOverlay(e) {
+if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+// ===== DEFAULT EXERCISES =====
+const DEFAULT_EXERCISES = [
+// Upper compounds
+{ id: 'ex_bench', name: 'Barbell Bench Press', muscleGroup: 'chest', secondary: ['triceps','front_delts'], equipment: 'barbell', type: 'compound' },
+{ id: 'ex_incline_db', name: 'Incline Dumbbell Press', muscleGroup: 'chest', secondary: ['triceps','front_delts'], equipment: 'dumbbell', type: 'compound' },
+{ id: 'ex_incline_bb', name: 'Incline Barbell Press', muscleGroup: 'chest', secondary: ['triceps','front_delts'], equipment: 'barbell', type: 'compound' },
+{ id: 'ex_machine_chest', name: 'Machine Chest Press', muscleGroup: 'chest', secondary: ['triceps'], equipment: 'machine', type: 'compound' },
+{ id: 'ex_db_bench', name: 'Dumbbell Bench Press', muscleGroup: 'chest', secondary: ['triceps','front_delts'], equipment: 'dumbbell', type: 'compound' },
+{ id: 'ex_ohp', name: 'Overhead Press', muscleGroup: 'shoulders', secondary: ['triceps'], equipment: 'barbell', type: 'compound' },
+{ id: 'ex_pullup', name: 'Pull-up', muscleGroup: 'back', secondary: ['biceps'], equipment: 'bodyweight', type: 'compound' },
+{ id: 'ex_weighted_pullup', name: 'Weighted Pull-up', muscleGroup: 'back', secondary: ['biceps'], equipment: 'bodyweight_weighted', type: 'compound' },
+{ id: 'ex_lat_pulldown', name: 'Lat Pulldown', muscleGroup: 'back', secondary: ['biceps'], equipment: 'cable', type: 'compound' },
+{ id: 'ex_chest_row', name: 'Chest-Supported Row', muscleGroup: 'back', secondary: ['biceps','rear_delts'], equipment: 'dumbbell', type: 'compound' },
+{ id: 'ex_cable_row', name: 'Seated Cable Row', muscleGroup: 'back', secondary: ['biceps','rear_delts'], equipment: 'cable', type: 'compound' },
+// Lower compounds
+{ id: 'ex_squat', name: 'Back Squat', muscleGroup: 'quads', secondary: ['glutes','hamstrings'], equipment: 'barbell', type: 'compound' },
+{ id: 'ex_front_squat', name: 'Front Squat', muscleGroup: 'quads', secondary: ['glutes'], equipment: 'barbell', type: 'compound' },
+{ id: 'ex_hack_squat', name: 'Hack Squat', muscleGroup: 'quads', secondary: ['glutes'], equipment: 'machine', type: 'compound' },
+{ id: 'ex_rdl', name: 'Romanian Deadlift', muscleGroup: 'hamstrings', secondary: ['glutes','back'], equipment: 'barbell', type: 'compound' },
+{ id: 'ex_hip_thrust', name: 'Hip Thrust', muscleGroup: 'glutes', secondary: ['hamstrings'], equipment: 'barbell', type: 'compound' },
+{ id: 'ex_leg_press', name: 'Leg Press', muscleGroup: 'quads', secondary: ['glutes'], equipment: 'machine', type: 'compound' },
+{ id: 'ex_bss', name: 'Bulgarian Split Squat', muscleGroup: 'quads', secondary: ['glutes'], equipment: 'dumbbell', type: 'compound', unilateral: true },
+{ id: 'ex_goblet_squat', name: 'Goblet Squat', muscleGroup: 'quads', secondary: ['glutes'], equipment: 'dumbbell', type: 'compound' },
+// Isolation
+{ id: 'ex_lateral_raise', name: 'Lateral Raise', muscleGroup: 'side_delts', secondary: [], equipment: 'dumbbell', type: 'isolation' },
+{ id: 'ex_cable_lateral', name: 'Cable Lateral Raise', muscleGroup: 'side_delts', secondary: [], equipment: 'cable', type: 'isolation' },
+{ id: 'ex_rear_delt_fly', name: 'Rear Delt Fly', muscleGroup: 'rear_delts', secondary: [], equipment: 'dumbbell', type: 'isolation' },
+{ id: 'ex_reverse_pec', name: 'Reverse Pec Deck', muscleGroup: 'rear_delts', secondary: [], equipment: 'machine', type: 'isolation' },
+{ id: 'ex_tricep_ext', name: 'Triceps Cable Extension', muscleGroup: 'triceps', secondary: [], equipment: 'cable', type: 'isolation' },
+{ id: 'ex_overhead_tri', name: 'Overhead Triceps Extension', muscleGroup: 'triceps', secondary: [], equipment: 'cable', type: 'isolation' },
+{ id: 'ex_curl', name: 'Dumbbell Curl', muscleGroup: 'biceps', secondary: [], equipment: 'dumbbell', type: 'isolation' },
+{ id: 'ex_cable_curl', name: 'Cable Curl', muscleGroup: 'biceps', secondary: [], equipment: 'cable', type: 'isolation' },
+{ id: 'ex_incline_curl', name: 'Incline Dumbbell Curl', muscleGroup: 'biceps', secondary: [], equipment: 'dumbbell', type: 'isolation' },
+{ id: 'ex_leg_curl', name: 'Seated Leg Curl', muscleGroup: 'hamstrings', secondary: [], equipment: 'machine', type: 'isolation' },
+{ id: 'ex_lying_leg_curl', name: 'Lying Leg Curl', muscleGroup: 'hamstrings', secondary: [], equipment: 'machine', type: 'isolation' },
+{ id: 'ex_leg_ext', name: 'Leg Extension', muscleGroup: 'quads', secondary: [], equipment: 'machine', type: 'isolation' },
+{ id: 'ex_standing_calf', name: 'Standing Calf Raise', muscleGroup: 'calves', secondary: [], equipment: 'machine', type: 'isolation' },
+{ id: 'ex_seated_calf', name: 'Seated Calf Raise', muscleGroup: 'calves', secondary: [], equipment: 'machine', type: 'isolation' },
+{ id: 'ex_cable_crunch', name: 'Cable Crunch', muscleGroup: 'core', secondary: [], equipment: 'cable', type: 'isolation' },
+{ id: 'ex_hanging_knee', name: 'Hanging Knee Raise', muscleGroup: 'core', secondary: [], equipment: 'bodyweight', type: 'isolation' },
+// Bodyweight
+{ id: 'ex_pushup', name: 'Push-up', muscleGroup: 'chest', secondary: ['triceps','front_delts'], equipment: 'bodyweight', type: 'compound' },
+{ id: 'ex_pike_pushup', name: 'Pike Push-up', muscleGroup: 'shoulders', secondary: ['triceps'], equipment: 'bodyweight', type: 'compound' },
+{ id: 'ex_split_squat', name: 'Split Squat', muscleGroup: 'quads', secondary: ['glutes'], equipment: 'bodyweight', type: 'compound', unilateral: true },
+{ id: 'ex_hip_bridge', name: 'Single-Leg Hip Bridge', muscleGroup: 'glutes', secondary: ['hamstrings'], equipment: 'bodyweight', type: 'compound', unilateral: true },
+{ id: 'ex_bw_calf', name: 'Bodyweight Calf Raise', muscleGroup: 'calves', secondary: [], equipment: 'bodyweight', type: 'isolation' },
+{ id: 'ex_chinup', name: 'Chin-up', muscleGroup: 'back', secondary: ['biceps'], equipment: 'bodyweight', type: 'compound' },
+{ id: 'ex_stepup', name: 'Step-Up', muscleGroup: 'quads', secondary: ['glutes'], equipment: 'bodyweight', type: 'compound', unilateral: true },
+];
+
+// ===== DEFAULT TEMPLATES =====
+const DEFAULT_TEMPLATES = [
+{
+id: 'tpl_upper_a', name: 'Upper A — Strength', dayType: 'upper-a',
+icon: '💪', color: '#6c63ff',
+exercises: [
+{ exerciseId: 'ex_bench', sets: 3, repMin: 4, repMax: 6, restSeconds: 210, rir: 2, isWarmup: false },
+{ exerciseId: 'ex_pullup', sets: 3, repMin: 4, repMax: 6, restSeconds: 180, rir: 2, isWarmup: false },
+{ exerciseId: 'ex_ohp', sets: 2, repMin: 5, repMax: 8, restSeconds: 150, rir: 2, isWarmup: false },
+{ exerciseId: 'ex_chest_row', sets: 3, repMin: 6, repMax: 8, restSeconds: 150, rir: 2, isWarmup: false },
+{ exerciseId: 'ex_incline_db', sets: 2, repMin: 8, repMax: 12, restSeconds: 120, rir: 2, isWarmup: false },
+{ exerciseId: 'ex_lateral_raise', sets: 2, repMin: 12, repMax: 20, restSeconds: 90, rir: 1, isWarmup: false },
+{ exerciseId: 'ex_tricep_ext', sets: 2, repMin: 10, repMax: 15, restSeconds: 90, rir: 1, isWarmup: false },
+{ exerciseId: 'ex_curl', sets: 2, repMin: 10, repMax: 15, restSeconds: 90, rir: 1, isWarmup: false },
+]
+},
+{
+id: 'tpl_lower_a', name: 'Lower A — Strength', dayType: 'lower-a',
+icon: '🦵', color: '#4ade80',
+exercises: [
+{ exerciseId: 'ex_squat', sets: 3, repMin: 4, repMax: 6, restSeconds: 240, rir: 2, isWarmup: false },
+{ exerciseId: 'ex_rdl', sets: 3, repMin: 6, repMax: 8, restSeconds: 180, rir: 2, isWarmup: false },
+{ exerciseId: 'ex_leg_press', sets: 2, repMin: 8, repMax: 12, restSeconds: 150, rir: 2, isWarmup: false },
+{ exerciseId: 'ex_leg_curl', sets: 3, repMin: 10, repMax: 15, restSeconds: 90, rir: 1, isWarmup: false },
+{ exerciseId: 'ex_standing_calf', sets: 3, repMin: 8, repMax: 15, restSeconds: 90, rir: 1, isWarmup: false },
+{ exerciseId: 'ex_cable_crunch', sets: 2, repMin: 10, repMax: 15, restSeconds: 90, rir: 1, isWarmup: false },
+]
+},
+{
+id: 'tpl_upper_b', name: 'Upper B — Hypertrophy', dayType: 'upper-b',
+icon: '🏋️', color: '#fbbf24',
+exercises: [
+{ exerciseId: 'ex_incline_db', sets: 3, repMin: 6, repMax: 10, restSeconds: 150, rir: 2, isWarmup: false },
+{ exerciseId: 'ex_lat_pulldown', sets: 3, repMin: 8, repMax: 12, restSeconds: 150, rir: 2, isWarmup: false },
+{ exerciseId: 'ex_cable_row', sets: 3, repMin: 8, repMax: 12, restSeconds: 150, rir: 2, isWarmup: false },
+{ exerciseId: 'ex_machine_chest', sets: 2, repMin: 10, repMax: 15, restSeconds: 120, rir: 2, isWarmup: false },
+{ exerciseId: 'ex_cable_lateral', sets: 3, repMin: 12, repMax: 20, restSeconds: 90, rir: 1, isWarmup: false },
+{ exerciseId: 'ex_rear_delt_fly', sets: 2, repMin: 12, repMax: 20, restSeconds: 90, rir: 1, isWarmup: false },
+{ exerciseId: 'ex_overhead_tri', sets: 2, repMin: 10, repMax: 15, restSeconds: 90, rir: 1, isWarmup: false },
+{ exerciseId: 'ex_incline_curl', sets: 2, repMin: 10, repMax: 15, restSeconds: 90, rir: 1, isWarmup: false },
+]
+},
+{
+id: 'tpl_lower_b', name: 'Lower B — Hypertrophy', dayType: 'lower-b',
+icon: '⚡', color: '#f87171',
+exercises: [
+{ exerciseId: 'ex_hack_squat', sets: 3, repMin: 6, repMax: 10, restSeconds: 180, rir: 2, isWarmup: false },
+{ exerciseId: 'ex_hip_thrust', sets: 3, repMin: 8, repMax: 12, restSeconds: 150, rir: 2, isWarmup: false },
+{ exerciseId: 'ex_bss', sets: 2, repMin: 8, repMax: 12, restSeconds: 120, rir: 2, isWarmup: false },
+{ exerciseId: 'ex_leg_curl', sets: 3, repMin: 10, repMax: 15, restSeconds: 90, rir: 1, isWarmup: false },
+{ exerciseId: 'ex_leg_ext', sets: 2, repMin: 12, repMax: 15, restSeconds: 90, rir: 1, isWarmup: false },
+{ exerciseId: 'ex_seated_calf', sets: 3, repMin: 10, repMax: 20, restSeconds: 90, rir: 1, isWarmup: false },
+{ exerciseId: 'ex_hanging_knee', sets: 2, repMin: 10, repMax: 20, restSeconds: 90, rir: 1, isWarmup: false },
+]
+}
+];
+
+// ===== SEED DATA =====
+async function seedDefaults() {
+const exercises = await dbGetAll('exercises');
+if (exercises.length === 0) {
+for (const ex of DEFAULT_EXERCISES) {
+await dbPut('exercises', { ...ex, custom: false, createdAt: Date.now() });
+}
+}
+const templates = await dbGetAll('templates');
+if (templates.length === 0) {
+for (const tpl of DEFAULT_TEMPLATES) {
+await dbPut('templates', { ...tpl, custom: false, createdAt: Date.now() });
+}
+}
+}
+
+// ===== EXERCISE CACHE =====
+let exerciseCache = {};
+
+async function loadExerciseCache() {
+const all = await dbGetAll('exercises');
+exerciseCache = {};
+all.forEach(e => exerciseCache[e.id] = e);
+}
+
+function getExName(id) {
+return exerciseCache[id]?.name || id;
+}
+
+// ===== TEMPLATE RENDERING =====
+async function refreshTemplates() {
+const templates = await dbGetAll('templates');
+const container = document.getElementById('templateList');
+if (templates.length === 0) {
+container.innerHTML = '<div class="empty-state"><p>No templates</p></div>';
+return;
+}
+const dayClasses = { 'upper-a': 'day-upper-a', 'lower-a': 'day-lower-a', 'upper-b': 'day-upper-b', 'lower-b': 'day-lower-b' };
+container.innerHTML = templates.map(t => {
+const exCount = t.exercises?.length || 0;
+const totalSets = t.exercises?.reduce((s, e) => s + (e.isWarmup ? 0 : e.sets), 0) || 0;
+const dc = dayClasses[t.dayType] || '';
+return `
+<div class="template-card" onclick="showTemplateDetail('${t.id}')">
+<div class="template-icon ${dc}">${t.icon || '💪'}</div>
+<div class="template-info">
+<div class="template-name">${t.name}</div>
+<div class="template-meta">${exCount} exercises · ${totalSets} working sets</div>
+</div>
+<div class="template-action">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,18 15,12 9,6"/></svg>
+</div>
+</div>`;
+}).join('');
+}
+
+// ===== TEMPLATE DETAIL =====
+async function showTemplateDetail(id) {
+const tpl = await dbGet('templates', id);
+if (!tpl) return;
+const exList = (tpl.exercises || []).map((e, i) => {
+const name = getExName(e.exerciseId);
+return `<div class="stat-row">
+<span class="stat-label">${name}</span>
+<span class="stat-value">${e.sets} × ${e.repMin}–${e.repMax}</span>
+</div>`;
+}).join('');
+showModal(`
+<div class="flex-between mb-8">
+<div class="modal-title">${tpl.name}</div>
+</div>
+<div>${exList}</div>
+<div class="modal-actions" style="flex-wrap:wrap">
+<button class="btn btn-primary" onclick="startWorkoutFromTemplate('${id}');closeModal()">Start Workout</button>
+<button class="btn btn-secondary" onclick="editTemplate('${id}')">Edit</button>
+<button class="btn btn-danger btn-sm" onclick="deleteTemplate('${id}')">Delete</button>
+</div>
+`);
+}
+
+// ===== EDIT TEMPLATE =====
+async function editTemplate(id) {
+const tpl = await dbGet('templates', id);
+if (!tpl) return;
+closeModal();
+
+let tempExercises = JSON.parse(JSON.stringify(tpl.exercises || []));
+const allExercises = await dbGetAll('exercises');
+
+function renderEditor() {
+const exRows = tempExercises.map((e, i) => {
+const name = getExName(e.exerciseId);
+return `<div class="card" style="padding:10px;margin-bottom:8px">
+<div class="flex-between mb-8">
+<span class="fw-600 text-sm">${name}</span>
+<button class="btn btn-ghost btn-sm" onclick="removeTemplateEx(${i})" style="color:var(--danger)">✕</button>
+</div>
+<div class="form-row">
+<div class="form-group" style="margin-bottom:0">
+<label class="form-label">Sets</label>
+<input type="number" class="form-input" value="${e.sets}" min="1" max="10" inputmode="numeric"
+onchange="updateTemplateEx(${i},'sets',parseInt(this.value))">
+</div>
+<div class="form-group" style="margin-bottom:0">
+<label class="form-label">Rep min</label>
+<input type="number" class="form-input" value="${e.repMin}" min="1" max="50" inputmode="numeric"
+onchange="updateTemplateEx(${i},'repMin',parseInt(this.value))">
+</div>
+<div class="form-group" style="margin-bottom:0">
+<label class="form-label">Rep max</label>
+<input type="number" class="form-input" value="${e.repMax}" min="1" max="50" inputmode="numeric"
+onchange="updateTemplateEx(${i},'repMax',parseInt(this.value))">
+</div>
+</div>
+<div class="form-row mt-8">
+<div class="form-group" style="margin-bottom:0">
+<label class="form-label">Rest (s)</label>
+<input type="number" class="form-input" value="${e.restSeconds}" min="0" max="600" inputmode="numeric"
+onchange="updateTemplateEx(${i},'restSeconds',parseInt(this.value))">
+</div>
+<div class="form-group" style="margin-bottom:0">
+<label class="form-label">RIR target</label>
+<input type="number" class="form-input" value="${e.rir != null ? e.rir : 2}" min="0" max="5" inputmode="numeric"
+onchange="updateTemplateEx(${i},'rir',parseInt(this.value))">
+</div>
+</div>
+</div>`;
+}).join('');
+
+showModal(`
+<div class="modal-title">Edit: ${tpl.name}</div>
+<div class="form-group">
+<label class="form-label">Template name</label>
+<input type="text" class="form-input" id="editTplName" value="${tpl.name}">
+</div>
+<div class="page-subtitle">Exercises</div>
+<div id="editExList">${exRows}</div>
+<button class="btn btn-secondary btn-full btn-sm mt-8" onclick="addExToTemplate('${id}')">+ Add Exercise</button>
+<div class="modal-actions">
+<button class="btn btn-primary" onclick="saveTemplateEdit('${id}')">Save</button>
+<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+</div>
+`);
+}
+
+window._tempExercises = tempExercises;
+window.removeTemplateEx = (i) => { tempExercises.splice(i, 1); window._tempExercises = tempExercises; renderEditor(); };
+window.updateTemplateEx = (i, field, val) => {
+if (isNaN(val) || val < 0) return;
+tempExercises[i][field] = val;
+window._tempExercises = tempExercises;
+};
+window.addExToTemplate = (tplId) => {
+const options = allExercises.map(ex =>
+`<div class="exercise-pick-item" onclick="pickExForTemplate('${ex.id}','${tplId}')">
+<div><div class="fw-600 text-sm">${ex.name}</div><div class="exercise-pick-muscles">${ex.muscleGroup}</div></div>
+</div>`
+).join('');
+showModal(`<div class="modal-title">Add Exercise</div>
+<div class="form-group">
+<input type="text" class="form-input" placeholder="Search..." oninput="filterExPicker(this.value)">
+</div>
+<div id="exPickerList">${options}</div>
+<button class="btn btn-secondary btn-full mt-8" onclick="editTemplate('${tplId}')">Back</button>
+`);
+};
+window.filterExPicker = (q) => {
+const items = document.querySelectorAll('#exPickerList .exercise-pick-item');
+items.forEach(item => {
+item.style.display = item.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+});
+};
+window.pickExForTemplate = (exId, tplId) => {
+tempExercises.push({ exerciseId: exId, sets: 3, repMin: 8, repMax: 12, restSeconds: 120, rir: 2, isWarmup: false });
+window._tempExercises = tempExercises;
+renderEditor();
+};
+window.saveTemplateEdit = async (tplId) => {
+const name = document.getElementById('editTplName')?.value?.trim();
+if (!name) { toast('Name required', 'error'); return; }
+tpl.name = name;
+tpl.exercises = window._tempExercises;
+tpl.updatedAt = Date.now();
+await dbPut('templates', tpl);
+toast('Template saved', 'success');
+closeModal();
+refreshTemplates();
+};
+
+renderEditor();
+}
+
+async function deleteTemplate(id) {
+if (!confirm('Delete this template? Historical workouts will not be affected.')) return;
+await dbDelete('templates', id);
+toast('Template deleted', 'success');
+closeModal();
+refreshTemplates();
+}
+
+// ===== CREATE TEMPLATE =====
+function showCreateTemplateModal() {
+showModal(`
+<div class="modal-title">New Template</div>
+<div class="form-group">
+<label class="form-label">Name</label>
+<input type="text" class="form-input" id="newTplName" placeholder="e.g. Push Day">
+</div>
+<div class="modal-actions">
+<button class="btn btn-primary" onclick="createTemplate()">Create</button>
+<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+</div>
+`);
+}
+
+async function createTemplate() {
+const name = document.getElementById('newTplName')?.value?.trim();
+if (!name) { toast('Name required', 'error'); return; }
+const tpl = {
+id: 'tpl_' + uid(), name, icon: '💪', color: '#6c63ff',
+dayType: '', exercises: [], custom: true, createdAt: Date.now()
+};
+await dbPut('templates', tpl);
+toast('Template created', 'success');
+closeModal();
+editTemplate(tpl.id);
+}
+
+// ===== START WORKOUT MODAL =====
+async function showStartWorkoutModal() {
+const templates = await dbGetAll('templates');
+const active = await getActiveSession();
+let html = '<div class="modal-title">Start Workout</div>';
+if (active) {
+html += `<div class="rec-card mb-16"><div class="rec-title">Active workout in progress</div>
+<div class="rec-body">${active.templateName || 'Workout'} — started ${formatDate(active.startTime)}</div>
+<div class="rec-actions"><button class="btn btn-primary btn-sm" onclick="resumeWorkout();closeModal()">Resume</button>
+<button class="btn btn-danger btn-sm" onclick="cancelActiveWorkout()">Discard</button></div></div>`;
+}
+html += templates.map(t => {
+const setCount = t.exercises?.reduce((s, e) => s + (e.isWarmup ? 0 : e.sets), 0) || 0;
+return `<div class="template-card" onclick="startWorkoutFromTemplate('${t.id}');closeModal()">
+<div class="template-icon">${t.icon || '💪'}</div>
+<div class="template-info">
+<div class="template-name">${t.name}</div>
+<div class="template-meta">${setCount} working sets</div>
+</div>
+</div>`;
+}).join('');
+html += `<button class="btn btn-secondary btn-full mt-8" onclick="startEmptyWorkout();closeModal()">Empty Workout</button>`;
+showModal(html);
+}
+
+// ===== ACTIVE SESSION STATE =====
+let activeSession = null;
+let elapsedInterval = null;
+
+async function getActiveSession() {
+const sessions = await dbGetAll('sessions');
+return sessions.find(s => s.status === 'active') || null;
+}
+
+async function startWorkoutFromTemplate(tplId) {
+const existing = await getActiveSession();
+if (existing) {
+if (!confirm('An active workout exists. Start a new one and discard it?')) return;
+await dbDelete('sessions', existing.id);
+}
+const tpl = await dbGet('templates', tplId);
+if (!tpl) { toast('Template not found', 'error'); return; }
+
+// Look up previous session for this template
+const allSessions = await dbGetAll('sessions');
+const prevSessions = allSessions.filter(s => s.status === 'completed' && s.templateId === tplId)
+.sort((a, b) => b.date - a.date);
+const prevSession = prevSessions[0] || null;
+
+const session = {
+id: 'sess_' + uid(),
+templateId: tplId,
+templateName: tpl.name,
+status: 'active',
+startTime: Date.now(),
+date: Date.now(),
+exercises: tpl.exercises.map(te => {
+const prevEx = prevSession?.exercises?.find(pe => pe.exerciseId === te.exerciseId);
+const prevSets = prevEx?.sets?.filter(s => !s.isWarmup && s.completed) || [];
+return {
+exerciseId: te.exerciseId,
+exerciseName: getExName(te.exerciseId),
+repMin: te.repMin,
+repMax: te.repMax,
+restSeconds: te.restSeconds,
+rirTarget: te.rir != null ? te.rir : 2,
+note: '',
+previousSets: prevSets.map(ps => ({ weight: ps.weight, reps: ps.reps })),
+sets: Array.from({ length: te.sets }, (_, i) => ({
+id: uid(),
+setNumber: i + 1,
+isWarmup: false,
+weight: prevSets[i]?.weight || null,
+reps: null,
+rir: null,
+completed: false,
+}))
+};
+}),
+notes: '',
+};
+
+await dbPut('sessions', session);
+activeSession = session;
+openActiveWorkout();
+}
+
+async function startEmptyWorkout() {
+const existing = await getActiveSession();
+if (existing) {
+if (!confirm('Discard active workout?')) return;
+await dbDelete('sessions', existing.id);
+}
+const session = {
+id: 'sess_' + uid(), templateId: null, templateName: 'Custom Workout',
+status: 'active', startTime: Date.now(), date: Date.now(),
+exercises: [], notes: '',
+};
+await dbPut('sessions', session);
+activeSession = session;
+openActiveWorkout();
+}
+
+async function resumeWorkout() {
+const s = await getActiveSession();
+if (s) {
+activeSession = s;
+openActiveWorkout();
+} else {
+toast('No active workout found', 'error');
+}
+}
+
+async function cancelActiveWorkout() {
+if (!confirm('Discard this workout? All logged data will be lost.')) return;
+const active = await getActiveSession();
+if (active) await dbDelete('sessions', active.id);
+activeSession = null;
+closeModal();
+navigate('home');
+toast('Workout discarded', 'info');
+}
+
+function openActiveWorkout() {
+document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+document.getElementById('page-active').classList.add('active');
+document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+currentPage = 'active';
+renderActiveWorkout();
+startElapsedTimer();
+}
+
+function startElapsedTimer() {
+clearInterval(elapsedInterval);
+elapsedInterval = setInterval(() => {
+if (!activeSession) return;
+const elapsed = Date.now() - activeSession.startTime;
+const min = Math.floor(elapsed / 60000);
+const sec = Math.floor((elapsed % 60000) / 1000);
+document.getElementById('activeElapsedTimer').textContent =
+`${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+}, 1000);
+}
+
+// ===== RENDER ACTIVE WORKOUT =====
+function renderActiveWorkout() {
+if (!activeSession) return;
+document.getElementById('activeWorkoutName').textContent = activeSession.templateName || 'Workout';
+const container = document.getElementById('activeExercises');
+
+container.innerHTML = activeSession.exercises.map((ex, ei) => {
+const prev = ex.previousSets?.length > 0
+? `Previous: ${ex.previousSets.map(p => `${p.weight ?? '-'}${prefs.unit} × ${p.reps}`).join(', ')}`
+: '';
+const rec = getRecommendation(ex);
+
+const setRows = ex.sets.map((s, si) => {
+const weightVal = s.weight != null ? s.weight : '';
+const repVal = s.reps != null ? s.reps : '';
+const filledClass = s.completed ? 'filled' : '';
+return `<div class="set-row ${s.isWarmup ? 'warmup' : ''}">
+<div class="set-num ${s.isWarmup ? 'warmup-label' : ''}">${s.isWarmup ? 'W' : si + 1 - ex.sets.filter((ss, idx) => idx < si && ss.isWarmup).length}</div>
+<div class="set-target">${ex.repMin}–${ex.repMax}</div>
+<input type="number" class="set-input ${filledClass}" value="${weightVal}" placeholder="${prefs.unit}"
+inputmode="decimal" step="any" min="0"
+onchange="updateSet(${ei},${si},'weight',this.value)" onfocus="this.select()">
+<input type="number" class="set-input ${filledClass}" value="${repVal}" placeholder="reps"
+inputmode="numeric" min="0" max="999"
+onchange="updateSet(${ei},${si},'reps',this.value)" onfocus="this.select()">
+<button class="set-check ${s.completed ? 'done' : ''}" onclick="toggleSet(${ei},${si})">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20,6 9,17 4,12"/></svg>
+</button>
+</div>`;
+}).join('');
+
+return `<div class="exercise-block" id="exBlock_${ei}">
+<div class="exercise-header">
+<div style="flex:1">
+<div class="exercise-name">${ex.exerciseName}</div>
+<div class="exercise-meta">Target RIR: ${ex.rirTarget ?? '—'} · Rest: ${Math.floor((ex.restSeconds || 120) / 60)}:${((ex.restSeconds || 120) % 60).toString().padStart(2, '0')}</div>
+</div>
+<div class="ex-actions">
+<button class="btn-icon btn-secondary" onclick="showExOptions(${ei})" title="Options">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+</button>
+</div>
+</div>
+${prev ? `<div class="exercise-prev">${prev}</div>` : ''}
+${rec ? `<div class="rec-card" style="margin-bottom:10px;padding:10px 12px">
+<div class="rec-body" style="margin-bottom:6px">${rec.text}</div>
+<div class="rec-actions">
+<button class="btn btn-sm btn-primary" onclick="acceptRec(${ei})">Accept</button>
+<button class="btn btn-sm btn-ghost" onclick="dismissRec(${ei})">Dismiss</button>
+</div>
+</div>` : ''}
+<div class="set-table">
+<div class="set-row set-row-header">
+<div>SET</div><div>TARGET</div><div>${prefs.unit.toUpperCase()}</div><div>REPS</div><div></div>
+</div>
+${setRows}
+</div>
+<div style="display:flex;gap:6px;margin-top:8px">
+<button class="btn btn-sm btn-secondary" onclick="addSet(${ei},false)">+ Set</button>
+<button class="btn btn-sm btn-ghost" onclick="addSet(${ei},true)">+ Warmup</button>
+</div>
+<div class="form-group mt-8" style="margin-bottom:0">
+<input type="text" class="form-input" placeholder="Exercise note..." value="${ex.note || ''}"
+style="font-size:0.8rem;padding:8px 10px" onchange="updateExNote(${ei},this.value)">
+</div>
+</div>`;
+}).join('');
+}
+
+async function updateSet(ei, si, field, value) {
+if (!activeSession) return;
+const numVal = parseFloat(value);
+if (value !== '' && (isNaN(numVal) || numVal < 0)) {
+toast('Invalid value', 'error');
+return;
+}
+activeSession.exercises[ei].sets[si][field] = value === '' ? null : numVal;
+await autoSaveSession();
+}
+
+async function toggleSet(ei, si) {
+if (!activeSession) return;
+const set = activeSession.exercises[ei].sets[si];
+const ex = activeSession.exercises[ei];
+
+if (!set.completed) {
+// Completing a set
+if (set.weight == null && set.reps == null) {
+// Try to auto-fill from previous if totally empty
+const prev = ex.previousSets?.[si];
+if (prev) {
+set.weight = prev.weight;
+set.reps = prev.reps;
+}
+}
+if (set.weight == null || set.reps == null) {
+toast('Enter weight and reps first', 'error');
+return;
+}
+set.completed = true;
+// Start rest timer
+startRestTimer(ex.restSeconds || 120);
+} else {
+set.completed = false;
+}
+await autoSaveSession();
+renderActiveWorkout();
+}
+
+async function addSet(ei, isWarmup) {
+if (!activeSession) return;
+const ex = activeSession.exercises[ei];
+const lastSet = ex.sets[ex.sets.length - 1];
+ex.sets.push({
+id: uid(), setNumber: ex.sets.length + 1, isWarmup,
+weight: isWarmup ? null : (lastSet?.weight || null),
+reps: null, rir: null, completed: false,
+});
+await autoSaveSession();
+renderActiveWorkout();
+}
+
+function showExOptions(ei) {
+showModal(`
+<div class="modal-title">${activeSession.exercises[ei].exerciseName}</div>
+<button class="btn btn-secondary btn-full mb-8" onclick="moveExercise(${ei},-1);closeModal()">↑ Move Up</button>
+<button class="btn btn-secondary btn-full mb-8" onclick="moveExercise(${ei},1);closeModal()">↓ Move Down</button>
+<button class="btn btn-secondary btn-full mb-8" onclick="replaceExercise(${ei})">Replace Exercise</button>
+<button class="btn btn-danger btn-full" onclick="removeExercise(${ei});closeModal()">Remove Exercise</button>
+`);
+}
+
+async function moveExercise(ei, dir) {
+if (!activeSession) return;
+const newIdx = ei + dir;
+if (newIdx < 0 || newIdx >= activeSession.exercises.length) return;
+const temp = activeSession.exercises[ei];
+activeSession.exercises[ei] = activeSession.exercises[newIdx];
+activeSession.exercises[newIdx] = temp;
+await autoSaveSession();
+renderActiveWorkout();
+}
+
+async function removeExercise(ei) {
+if (!activeSession) return;
+if (!confirm('Remove this exercise from the current workout?')) return;
+activeSession.exercises.splice(ei, 1);
+await autoSaveSession();
+renderActiveWorkout();
+}
+
+async function replaceExercise(ei) {
+const allEx = await dbGetAll('exercises');
+const options = allEx.map(ex =>
+`<div class="exercise-pick-item" onclick="doReplaceExercise(${ei},'${ex.id}')">
+<div><div class="fw-600 text-sm">${ex.name}</div><div class="exercise-pick-muscles">${ex.muscleGroup}</div></div>
+</div>`
+).join('');
+showModal(`<div class="modal-title">Replace Exercise</div>
+<div class="form-group"><input type="text" class="form-input" placeholder="Search..." oninput="filterExPicker(this.value)"></div>
+<div id="exPickerList">${options}</div>
+`);
+}
+
+window.doReplaceExercise = async function(ei, exId) {
+if (!activeSession) return;
+const ex = exerciseCache[exId];
+if (!ex) return;
+activeSession.exercises[ei].exerciseId = exId;
+activeSession.exercises[ei].exerciseName = ex.name;
+activeSession.exercises[ei].previousSets = [];
+closeModal();
+await autoSaveSession();
+renderActiveWorkout();
+};
+
+async function addExerciseToActive() {
+const allEx = await dbGetAll('exercises');
+const options = allEx.map(ex =>
+`<div class="exercise-pick-item" onclick="doAddExercise('${ex.id}')">
+<div><div class="fw-600 text-sm">${ex.name}</div><div class="exercise-pick-muscles">${ex.muscleGroup}</div></div>
+</div>`
+).join('');
+showModal(`<div class="modal-title">Add Exercise</div>
+<div class="form-group"><input type="text" class="form-input" placeholder="Search..." oninput="filterExPicker(this.value)"></div>
+<div id="exPickerList">${options}</div>
+<button class="btn btn-secondary btn-full mt-8" onclick="showAddCustomExercise()">+ Create New Exercise</button>
+`);
+}
+
+window.doAddExercise = async function(exId) {
+if (!activeSession) return;
+const ex = exerciseCache[exId];
+if (!ex) return;
+activeSession.exercises.push({
+exerciseId: exId, exerciseName: ex.name,
+repMin: 8, repMax: 12, restSeconds: 120, rirTarget: 2, note: '',
+previousSets: [],
+sets: [{ id: uid(), setNumber: 1, isWarmup: false, weight: null, reps: null, rir: null, completed: false },
+{ id: uid(), setNumber: 2, isWarmup: false, weight: null, reps: null, rir: null, completed: false },
+{ id: uid(), setNumber: 3, isWarmup: false, weight: null, reps: null, rir: null, completed: false }]
+});
+closeModal();
+await autoSaveSession();
+renderActiveWorkout();
+};
+
+async function updateExNote(ei, val) {
+if (!activeSession) return;
+activeSession.exercises[ei].note = val;
+await autoSaveSession();
+}
+
+async function autoSaveSession() {
+if (!activeSession) return;
+activeSession.lastSaved = Date.now();
+await dbPut('sessions', activeSession);
+}
+
+// ===== FINISH WORKOUT =====
+async function finishWorkout() {
+if (!activeSession) return;
+const completedSets = activeSession.exercises.reduce((total, ex) =>
+total + ex.sets.filter(s => s.completed && !s.isWarmup).length, 0);
+
+if (completedSets === 0) {
+if (!confirm('No sets completed. Discard this workout?')) return;
+await dbDelete('sessions', activeSession.id);
+activeSession = null;
+clearInterval(elapsedInterval);
+dismissRestTimer();
+navigate('home');
+toast('Workout discarded', 'info');
+return;
+}
+
+if (!confirm(`Finish workout with ${completedSets} completed sets?`)) return;
+
+activeSession.status = 'completed';
+activeSession.endTime = Date.now();
+activeSession.duration = activeSession.endTime - activeSession.startTime;
+await dbPut('sessions', activeSession);
+
+// Generate recommendations for next session
+await generateRecommendations(activeSession);
+
+activeSession = null;
+clearInterval(elapsedInterval);
+dismissRestTimer();
+toast('Workout saved! 💪', 'success');
+navigate('home');
+}
+
+// ===== REST TIMER =====
+let restTimerInterval = null;
+let restTimerRemaining = 0;
+let restTimerTotal = 0;
+let restTimerPaused = false;
+
+function startRestTimer(seconds) {
+restTimerRemaining = seconds;
+restTimerTotal = seconds;
+restTimerPaused = false;
+clearInterval(restTimerInterval);
+document.getElementById('restTimerBar').classList.add('visible');
+document.getElementById('restTimerPauseBtn').textContent = '⏸';
+updateRestTimerDisplay();
+restTimerInterval = setInterval(() => {
+if (restTimerPaused) return;
+restTimerRemaining--;
+updateRestTimerDisplay();
+if (restTimerRemaining <= 0) {
+clearInterval(restTimerInterval);
+// Vibrate if supported
+if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+document.getElementById('restTimerDisplay').textContent = '0:00';
+document.getElementById('restTimerDisplay').style.color = 'var(--success)';
+setTimeout(() => {
+document.getElementById('restTimerDisplay').style.color = '';
+}, 2000);
+}
+}, 1000);
+}
+
+function updateRestTimerDisplay() {
+const m = Math.floor(restTimerRemaining / 60);
+const s = restTimerRemaining % 60;
+document.getElementById('restTimerDisplay').textContent = `${m}:${s.toString().padStart(2, '0')}`;
+const pct = restTimerTotal > 0 ? ((restTimerTotal - restTimerRemaining) / restTimerTotal) * 100 : 0;
+document.getElementById('restProgress').style.width = `${pct}%`;
+}
+
+function adjustRestTimer(delta) {
+restTimerRemaining = Math.max(0, restTimerRemaining + delta);
+restTimerTotal = Math.max(restTimerTotal, restTimerRemaining);
+updateRestTimerDisplay();
+}
+
+function toggleRestTimer() {
+restTimerPaused = !restTimerPaused;
+document.getElementById('restTimerPauseBtn').textContent = restTimerPaused ? '▶' : '⏸';
+}
+
+function dismissRestTimer() {
+clearInterval(restTimerInterval);
+document.getElementById('restTimerBar').classList.remove('visible');
+restTimerRemaining = 0;
+}
+
+// ===== PROGRESSION ENGINE =====
+function getRecommendation(exerciseData) {
+if (!prefs.recsEnabled) return null;
+const prev = exerciseData.previousSets;
+if (!prev || prev.length === 0) return null;
+if (prev.length < 2) return { text: 'Not enough history yet for a recommendation. Log more sessions.', type: 'info' };
+
+const repMin = exerciseData.repMin;
+const repMax = exerciseData.repMax;
+
+// Check if all previous working sets hit top of range
+const allHitMax = prev.every(s => s.reps >= repMax);
+const allHitMin = prev.every(s => s.reps >= repMin);
+const avgReps = prev.reduce((sum, s) => sum + s.reps, 0) / prev.length;
+const weight = prev[0]?.weight;
+if (!weight) return null;
+
+if (allHitMax) {
+const increment = prefs.unit === 'lb' ? 5 : 2.5;
+const newWeight = roundWeight(weight + increment, prefs.unit);
+return {
+text: `Previous: ${weight}${prefs.unit} × ${prev.map(s => s.reps).join(', ')}. All sets reached ${repMax} reps. Consider ${newWeight}${prefs.unit} next session, aiming for ${repMin}–${Math.min(repMin + 2, repMax)} reps.`,
+type: 'increase',
+newWeight,
+};
+}
+
+if (!allHitMin) {
+return {
+text: `Previous: ${weight}${prefs.unit} × ${prev.map(s => s.reps).join(', ')}. Not all sets reached ${repMin} reps yet. Keep ${weight}${prefs.unit} and aim to improve.`,
+type: 'hold',
+};
+}
+
+// Some but not all hit max
+const missedSets = prev.filter(s => s.reps < repMax).length;
+return {
+text: `Previous: ${weight}${prefs.unit} × ${prev.map(s => s.reps).join(', ')}. ${missedSets} set(s) still below ${repMax} reps. Keep ${weight}${prefs.unit} and aim to improve remaining sets.`,
+type: 'hold',
+};
+}
+
+async function acceptRec(ei) {
+if (!activeSession) return;
+const ex = activeSession.exercises[ei];
+const rec = getRecommendation(ex);
+if (rec?.newWeight) {
+ex.sets.forEach(s => {
+if (!s.isWarmup && !s.completed) s.weight = rec.newWeight;
+});
+toast('Weight updated', 'success');
+} else {
+toast('Recommendation noted', 'info');
+}
+// Mark rec as accepted
+ex._recAccepted = true;
+await autoSaveSession();
+renderActiveWorkout();
+}
+
+async function dismissRec(ei) {
+if (!activeSession) return;
+activeSession.exercises[ei]._recDismissed = true;
+await autoSaveSession();
+renderActiveWorkout();
+}
+
+async function generateRecommendations(session) {
+// Store recommendations for use in next session (via home page)
+for (const ex of session.exercises) {
+const completedSets = ex.sets.filter(s => s.completed && !s.isWarmup);
+if (completedSets.length === 0) continue;
+const rec = {
+id: 'rec_' + uid(),
+exerciseId: ex.exerciseId,
+sessionId: session.id,
+date: Date.now(),
+previousSets: completedSets.map(s => ({ weight: s.weight, reps: s.reps })),
+repMin: ex.repMin,
+repMax: ex.repMax,
+status: 'pending',
+};
+// Compute suggestion
+const allHitMax = completedSets.every(s => s.reps >= ex.repMax);
+const weight = completedSets[0]?.weight;
+if (allHitMax && weight) {
+const increment = prefs.unit === 'lb' ? 5 : 2.5;
+rec.suggestedWeight = roundWeight(weight + increment, prefs.unit);
+rec.type = 'increase';
+rec.text = `Consider increasing ${getExName(ex.exerciseId)} to ${rec.suggestedWeight}${prefs.unit}`;
+} else {
+rec.type = 'hold';
+rec.text = `Keep ${getExName(ex.exerciseId)} at ${weight}${prefs.unit} and aim to improve reps`;
+}
+await dbPut('recommendations', rec);
+}
+}
+
+// ===== HISTORY =====
+async function refreshHistory() {
+const sessions = await dbGetAll('sessions');
+const completed = sessions.filter(s => s.status === 'completed').sort((a, b) => b.date - a.date);
+const container = document.getElementById('historyList');
+const empty = document.getElementById('historyEmpty');
+
+if (completed.length === 0) {
+container.innerHTML = '';
+empty.classList.remove('hidden');
+return;
+}
+empty.classList.add('hidden');
+
+container.innerHTML = completed.map(s => {
+const totalSets = s.exercises?.reduce((t, e) => t + e.sets.filter(ss => ss.completed && !ss.isWarmup).length, 0) || 0;
+const exNames = s.exercises?.map(e => e.exerciseName).join(', ') || '';
+const duration = s.duration ? formatDuration(s.duration) : '—';
+return `<div class="history-item" onclick="showSessionDetail('${s.id}')">
+<div class="history-date">${formatDate(s.date)}</div>
+<div class="history-name">${s.templateName || 'Workout'}</div>
+<div class="history-stats">
+<div class="history-stat">🏋️ ${totalSets} sets</div>
+<div class="history-stat">⏱ ${duration}</div>
+</div>
+<div class="text-sm text-muted mt-8" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${exNames}</div>
+</div>`;
+}).join('');
+}
+
+async function showSessionDetail(id) {
+const session = await dbGet('sessions', id);
+if (!session) return;
+
+const exDetails = session.exercises.map(ex => {
+const sets = ex.sets.filter(s => s.completed && !s.isWarmup)
+.map(s => `${s.weight ?? '-'}${prefs.unit} × ${s.reps}`).join(', ');
+return `<div class="stat-row"><span class="stat-label">${ex.exerciseName}</span><span class="stat-value text-sm">${sets || 'No sets'}</span></div>`;
+}).join('');
+
+showModal(`
+<div class="flex-between mb-8">
+<div class="modal-title">${session.templateName || 'Workout'}</div>
+</div>
+<div class="text-sm text-muted mb-16">${formatDateFull(session.date)} · ${session.duration ? formatDuration(session.duration) : '—'}</div>
+${exDetails}
+${session.notes ? `<div class="mt-16 text-sm text-muted">${session.notes}</div>` : ''}
+<div class="modal-actions">
+<button class="btn btn-secondary" onclick="repeatSession('${id}');closeModal()">Repeat</button>
+<button class="btn btn-secondary" onclick="editSession('${id}')">Edit</button>
+<button class="btn btn-danger btn-sm" onclick="deleteSession('${id}')">Delete</button>
+</div>
+`);
+}
+
+async function repeatSession(id) {
+const session = await dbGet('sessions', id);
+if (!session || !session.templateId) {
+toast('Cannot repeat — no template linked', 'error');
+return;
+}
+await startWorkoutFromTemplate(session.templateId);
+}
+
+async function editSession(id) {
+const session = await dbGet('sessions', id);
+if (!session) return;
+closeModal();
+
+let html = `<div class="modal-title">Edit Session</div>
+<div class="text-sm text-muted mb-16">${formatDate(session.date)}</div>`;
+
+session.exercises.forEach((ex, ei) => {
+html += `<div class="card" style="padding:10px;margin-bottom:8px">
+<div class="fw-600 text-sm mb-8">${ex.exerciseName}</div>`;
+ex.sets.forEach((s, si) => {
+if (s.isWarmup) return;
+html += `<div class="form-row mb-8">
+<div class="form-group" style="margin-bottom:0">
+<input type="number" class="form-input" value="${s.weight ?? ''}" placeholder="${prefs.unit}" inputmode="decimal"
+onchange="editSessionSet('${id}',${ei},${si},'weight',this.value)">
+</div>
+<div class="form-group" style="margin-bottom:0">
+<input type="number" class="form-input" value="${s.reps ?? ''}" placeholder="reps" inputmode="numeric"
+onchange="editSessionSet('${id}',${ei},${si},'reps',this.value)">
+</div>
+</div>`;
+});
+html += `</div>`;
+});
+
+html += `<div class="modal-actions">
+<button class="btn btn-primary" onclick="closeModal();toast('Changes saved','success')">Done</button>
+</div>`;
+showModal(html);
+}
+
+window.editSessionSet = async function(sessId, ei, si, field, value) {
+const session = await dbGet('sessions', sessId);
+if (!session) return;
+const numVal = parseFloat(value);
+if (value !== '' && (isNaN(numVal) || numVal < 0)) return;
+session.exercises[ei].sets[si][field] = value === '' ? null : numVal;
+session.updatedAt = Date.now();
+await dbPut('sessions', session);
+};
+
+async function deleteSession(id) {
+if (!confirm('Delete this workout record? This cannot be undone.')) return;
+await dbDelete('sessions', id);
+toast('Session deleted', 'success');
+closeModal();
+refreshHistory();
+}
+
+// ===== HOME PAGE =====
+async function refreshHome() {
+document.getElementById('homeGreeting').textContent = getGreeting();
+
+// Active session indicator
+const active = await getActiveSession();
+document.getElementById('homeActiveIndicator').classList.toggle('hidden', !active);
+
+// Last workout
+const sessions = await dbGetAll('sessions');
+const completed = sessions.filter(s => s.status === 'completed').sort((a, b) => b.date - a.date);
+
+const lastCard = document.getElementById('homeLastWorkout');
+if (completed.length > 0) {
+const last = completed[0];
+const totalSets = last.exercises?.reduce((t, e) => t + e.sets.filter(s => s.completed && !s.isWarmup).length, 0) || 0;
+document.getElementById('homeLastName').textContent = last.templateName || 'Workout';
+document.getElementById('homeLastDate').textContent = formatDate(last.date);
+document.getElementById('homeLastStats').textContent = `${totalSets} sets · ${last.duration ? formatDuration(last.duration) : '—'}`;
+lastCard.classList.remove('hidden');
+} else {
+lastCard.classList.add('hidden');
+}
+
+// Next suggested session
+const templates = await dbGetAll('templates');
+const nextCard = document.getElementById('homeNextSession');
+if (templates.length > 0) {
+const templateOrder = ['tpl_upper_a', 'tpl_lower_a', 'tpl_upper_b', 'tpl_lower_b'];
+let nextTpl = templates[0];
+if (completed.length > 0 && completed[0].templateId) {
+const lastIdx = templateOrder.indexOf(completed[0].templateId);
+if (lastIdx >= 0) {
+const nextIdx = (lastIdx + 1) % templateOrder.length;
+const found = templates.find(t => t.id === templateOrder[nextIdx]);
+if (found) nextTpl = found;
+} else {
+// Find any template not done recently
+nextTpl = templates.find(t => t.id !== completed[0].templateId) || templates[0];
+}
+}
+document.getElementById('homeNextName').textContent = nextTpl.name;
+nextCard.classList.remove('hidden');
+nextCard.onclick = () => startWorkoutFromTemplate(nextTpl.id);
+} else {
+nextCard.classList.add('hidden');
+}
+
+// Latest recommendation
+const recs = await dbGetAll('recommendations');
+const pendingRecs = recs.filter(r => r.status === 'pending').sort((a, b) => b.date - a.date);
+const recDiv = document.getElementById('homeRec');
+if (pendingRecs.length > 0) {
+const r = pendingRecs[0];
+recDiv.innerHTML = `<div class="rec-card"><div class="rec-title">Progression Suggestion</div>
+<div class="rec-body">${r.text}</div></div>`;
+recDiv.classList.remove('hidden');
+} else {
+recDiv.classList.add('hidden');
+}
+
+// PRs
+await renderHomePRs(completed);
+}
+
+async function renderHomePRs(completed) {
+const prContainer = document.getElementById('homePRs');
+const prList = document.getElementById('homePRList');
+if (completed.length === 0) { prContainer.classList.add('hidden'); return; }
+
+// Calculate PRs per exercise
+const prs = {};
+completed.forEach(session => {
+session.exercises?.forEach(ex => {
+ex.sets?.filter(s => s.completed && !s.isWarmup && s.weight > 0).forEach(s => {
+const key = ex.exerciseId;
+if (!prs[key] || s.weight > prs[key].weight || (s.weight === prs[key].weight && s.reps > prs[key].reps)) {
+prs[key] = { weight: s.weight, reps: s.reps, date: session.date, name: ex.exerciseName };
+}
+});
+});
+});
+
+const prEntries = Object.values(prs).sort((a, b) => b.date - a.date).slice(0, 3);
+if (prEntries.length === 0) { prContainer.classList.add('hidden'); return; }
+
+prList.innerHTML = prEntries.map(pr => `
+<div class="pr-card">
+<div class="pr-icon">🏆</div>
+<div class="pr-info">
+<div class="pr-exercise">${pr.name}</div>
+<div class="pr-detail">${formatDate(pr.date)}</div>
+</div>
+<div class="pr-value">${pr.weight}${prefs.unit} × ${pr.reps}</div>
+</div>
+`).join('');
+prContainer.classList.remove('hidden');
+}
+
+// ===== PROGRESS PAGE =====
+let currentProgressTab = 'overview';
+
+function showProgressTab(tab) {
+currentProgressTab = tab;
+document.querySelectorAll('#progressTabs .tab-btn').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase() === tab));
+refreshProgress();
+}
+
+async function refreshProgress() {
+const container = document.getElementById('progressContent');
+const sessions = await dbGetAll('sessions');
+const completed = sessions.filter(s => s.status === 'completed').sort((a, b) => a.date - b.date);
+
+if (completed.length === 0) {
+container.innerHTML = '<div class="empty-state"><p>Complete workouts to see progress</p></div>';
+return;
+}
+
+switch (currentProgressTab) {
+case 'overview': renderOverview(container, completed); break;
+case 'exercises': await renderExerciseProgress(container, completed); break;
+case 'volume': renderVolumeProgress(container, completed); break;
+case 'records': renderRecords(container, completed); break;
+default: renderOverview(container, completed);
+}
+}
+
+function renderOverview(container, completed) {
+const totalWorkouts = completed.length;
+const totalSets = completed.reduce((t, s) => t + s.exercises.reduce((tt, e) => tt + e.sets.filter(ss => ss.completed && !ss.isWarmup).length, 0), 0);
+const avgDuration = completed.filter(s => s.duration).reduce((t, s) => t + s.duration, 0) / Math.max(1, completed.filter(s => s.duration).length);
+
+// Weekly frequency (last 4 weeks)
+const fourWeeksAgo = Date.now() - 28 * 24 * 3600 * 1000;
+const recentSessions = completed.filter(s => s.date >= fourWeeksAgo);
+const weeklyFreq = (recentSessions.length / 4).toFixed(1);
+
+// Volume chart (last 8 sessions)
+const recent = completed.slice(-8);
+const chartData = recent.map(s => ({
+label: new Date(s.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+value: s.exercises.reduce((t, e) => t + e.sets.filter(ss => ss.completed && !ss.isWarmup).length, 0),
+}));
+const maxVal = Math.max(...chartData.map(d => d.value), 1);
+
+const bars = chartData.map((d, i) => {
+const h = (d.value / maxVal) * 140;
+const x = 10 + i * (280 / chartData.length);
+const w = 280 / chartData.length - 8;
+return `<rect x="${x}" y="${160 - h}" width="${w}" height="${h}" rx="3" fill="var(--accent)" opacity="0.8"/>
+<text x="${x + w / 2}" y="${175}" text-anchor="middle" fill="var(--text3)" font-size="8">${d.label}</text>
+<text x="${x + w / 2}" y="${155 - h}" text-anchor="middle" fill="var(--text2)" font-size="9">${d.value}</text>`;
+}).join('');
+
+container.innerHTML = `
+<div class="card">
+<div class="stat-row"><span class="stat-label">Total workouts</span><span class="stat-value">${totalWorkouts}</span></div>
+<div class="stat-row"><span class="stat-label">Total working sets</span><span class="stat-value">${totalSets}</span></div>
+<div class="stat-row"><span class="stat-label">Avg. duration</span><span class="stat-value">${avgDuration > 0 ? formatDuration(avgDuration) : '—'}</span></div>
+<div class="stat-row"><span class="stat-label">Weekly frequency (4w)</span><span class="stat-value">${weeklyFreq}×</span></div>
+</div>
+<div class="chart-container">
+<div class="chart-title">Sets per Session (recent)</div>
+<svg class="chart-svg" viewBox="0 0 300 185">${bars}</svg>
+</div>`;
+}
+
+async function renderExerciseProgress(container, completed) {
+// Get unique exercises from completed sessions
+const exerciseMap = {};
+completed.forEach(s => {
+s.exercises?.forEach(e => {
+if (!exerciseMap[e.exerciseId]) exerciseMap[e.exerciseId] = { name: e.exerciseName, data: [] };
+const best = e.sets.filter(ss => ss.completed && !ss.isWarmup && ss.weight > 0)
+.sort((a, b) => b.weight - a.weight || b.reps - a.reps)[0];
+if (best) exerciseMap[e.exerciseId].data.push({ date: s.date, weight: best.weight, reps: best.reps });
+});
+});
+
+const entries = Object.entries(exerciseMap).filter(([, v]) => v.data.length > 0);
+if (entries.length === 0) {
+container.innerHTML = '<div class="empty-state"><p>No exercise data yet</p></div>';
+return;
+}
+
+// Show selector and chart for first exercise by default
+let selectedEx = entries[0][0];
+const selector = entries.map(([id, v]) =>
+`<div class="chip ${id === selectedEx ? 'active' : ''}" onclick="selectProgressExercise('${id}')" style="cursor:pointer">${v.name}</div>`
+).join('');
+
+container.innerHTML = `<div class="chip-group mb-16" id="exProgressChips">${selector}</div>
+<div id="exProgressChart"></div>`;
+
+window.selectProgressExercise = function(exId) {
+selectedEx = exId;
+document.querySelectorAll('#exProgressChips .chip').forEach(c =>
+c.classList.toggle('active', c.textContent === exerciseMap[exId].name));
+renderExChart(exerciseMap[exId], exId);
+};
+
+function renderExChart(exData, exId) {
+const data = exData.data.sort((a, b) => a.date - b.date);
+if (data.length < 2) {
+document.getElementById('exProgressChart').innerHTML = '<div class="chart-container"><div class="chart-empty">Need at least 2 sessions to chart progress</div></div>';
+return;
+}
+const maxW = Math.max(...data.map(d => d.weight));
+const minW = Math.min(...data.map(d => d.weight));
+const range = maxW - minW || 1;
+
+const points = data.map((d, i) => {
+const x = 30 + (i / (data.length - 1)) * 250;
+const y = 160 - ((d.weight - minW) / range) * 130;
+return `${x},${y}`;
+}).join(' ');
+
+const dots = data.map((d, i) => {
+const x = 30 + (i / (data.length - 1)) * 250;
+const y = 160 - ((d.weight - minW) / range) * 130;
+return `<circle cx="${x}" cy="${y}" r="4" fill="var(--accent)"/>
+<text x="${x}" y="${y - 10}" text-anchor="middle" fill="var(--text2)" font-size="8">${d.weight}</text>`;
+}).join('');
+
+const e1rm = data.map(d => ({ ...d, e1rm: Math.round(epley1RM(d.weight, d.reps)) }));
+const maxE = Math.max(...e1rm.map(d => d.e1rm));
+const minE = Math.min(...e1rm.map(d => d.e1rm));
+const rangeE = maxE - minE || 1;
+const e1rmPoints = e1rm.map((d, i) => {
+const x = 30 + (i / (data.length - 1)) * 250;
+const y = 160 - ((d.e1rm - minE) / rangeE) * 130;
+return `${x},${y}`;
+}).join(' ');
+
+document.getElementById('exProgressChart').innerHTML = `
+<div class="chart-container">
+<div class="chart-title">${exData.name} — Best Weight (${prefs.unit})</div>
+<svg class="chart-svg" viewBox="0 0 300 185">
+<text x="15" y="20" fill="var(--text3)" font-size="8">${maxW}</text>
+<text x="15" y="160" fill="var(--text3)" font-size="8">${minW}</text>
+<polyline points="${points}" fill="none" stroke="var(--accent)" stroke-width="2"/>
+${dots}
+<text x="280" y="180" text-anchor="end" fill="var(--text3)" font-size="7">${data.length} sessions</text>
+</svg>
+</div>
+<div class="chart-container">
+<div class="chart-title">Est. 1RM (Epley)</div>
+<svg class="chart-svg" viewBox="0 0 300 185">
+<text x="15" y="20" fill="var(--text3)" font-size="8">${maxE}</text>
+<text x="15" y="160" fill="var(--text3)" font-size="8">${minE}</text>
+<polyline points="${e1rmPoints}" fill="none" stroke="var(--warning)" stroke-width="2"/>
+${e1rm.map((d, i) => {
+const x = 30 + (i / (data.length - 1)) * 250;
+const y = 160 - ((d.e1rm - minE) / rangeE) * 130;
+return `<circle cx="${x}" cy="${y}" r="3" fill="var(--warning)"/>`;
+}).join('')}
+<text x="280" y="180" text-anchor="end" fill="var(--text3)" font-size="7">Estimate only — high-rep values less reliable</text>
+</svg>
+</div>`;
+}
+
+renderExChart(entries[0][1], entries[0][0]);
+}
+
+function renderVolumeProgress(container, completed) {
+// Weekly set counts by muscle group
+const muscleGroups = ['chest', 'back', 'shoulders', 'side_delts', 'rear_delts', 'quads', 'hamstrings', 'glutes', 'biceps', 'triceps', 'calves', 'core', 'front_delts'];
+const mgLabels = { chest: 'Chest', back: 'Back', shoulders: 'Shoulders', side_delts: 'Side Delts', rear_delts: 'Rear Delts', quads: 'Quads', hamstrings: 'Hamstrings', glutes: 'Glutes', biceps: 'Biceps', triceps: 'Triceps', calves: 'Calves', core: 'Core', front_delts: 'Front Delts' };
+
+// Count sets from last 7 days
+const oneWeekAgo = Date.now() - 7 * 24 * 3600 * 1000;
+const weekSessions = completed.filter(s => s.date >= oneWeekAgo);
+
+const counts = {};
+muscleGroups.forEach(mg => counts[mg] = 0);
+
+weekSessions.forEach(session => {
+session.exercises?.forEach(ex => {
+const workingSets = ex.sets.filter(s => s.completed && !s.isWarmup).length;
+const exInfo = exerciseCache[ex.exerciseId];
+if (exInfo) {
+counts[exInfo.muscleGroup] = (counts[exInfo.muscleGroup] || 0) + workingSets;
+// Secondary muscles get partial count
+(exInfo.secondary || []).forEach(sec => {
+counts[sec] = (counts[sec] || 0) + Math.ceil(workingSets * 0.5);
+});
+}
+});
+});
+
+const maxSets = Math.max(...Object.values(counts), 1);
+const bars = muscleGroups.filter(mg => counts[mg] > 0 || ['chest', 'back', 'quads', 'hamstrings', 'shoulders'].includes(mg))
+.map(mg => {
+const pct = (counts[mg] / Math.max(maxSets, 15)) * 100;
+let color = 'var(--accent)';
+if (counts[mg] >= 15) color = 'var(--warning)';
+if (counts[mg] >= 20) color = 'var(--danger)';
+return `<div class="volume-bar-container">
+<div class="volume-bar-label">
+<span>${mgLabels[mg] || mg}</span>
+<span>${counts[mg]} sets (direct + secondary)</span>
+</div>
+<div class="volume-bar-track"><div class="volume-bar-fill" style="width:${Math.min(pct, 100)}%;background:${color}"></div></div>
+</div>`;
+}).join('');
+
+container.innerHTML = `
+<div class="card">
+<div class="card-title mb-8">Weekly Volume (Last 7 Days)</div>
+<div class="text-sm text-muted mb-16">${weekSessions.length} sessions · Secondary involvement counted at ~50%</div>
+${bars || '<div class="text-sm text-muted">No data for this week</div>'}
+</div>
+<div class="card">
+<div class="text-sm text-muted">
+Volume targets are individual. 8–12 challenging weekly sets per major muscle is a common starting reference.
+More is not automatically better — adjust based on performance and recovery.
+</div>
+</div>`;
+}
+
+function renderRecords(container, completed) {
+const prs = {};
+completed.forEach(session => {
+session.exercises?.forEach(ex => {
+ex.sets?.filter(s => s.completed && !s.isWarmup && s.weight > 0).forEach(s => {
+const key = ex.exerciseId;
+if (!prs[key]) prs[key] = { name: ex.exerciseName, records: [] };
+prs[key].records.push({ weight: s.weight, reps: s.reps, date: session.date, e1rm: Math.round(epley1RM(s.weight, s.reps)) });
+});
+});
+});
+
+const prCards = Object.entries(prs).map(([id, data]) => {
+const bestWeight = data.records.sort((a, b) => b.weight - a.weight || b.reps - a.reps)[0];
+const bestE1rm = data.records.sort((a, b) => b.e1rm - a.e1rm)[0];
+return `<div class="pr-card">
+<div class="pr-icon">🏆</div>
+<div class="pr-info">
+<div class="pr-exercise">${data.name}</div>
+<div class="pr-detail">Best: ${bestWeight.weight}${prefs.unit} × ${bestWeight.reps} · Est 1RM: ${bestE1rm.e1rm}${prefs.unit}</div>
+<div class="pr-detail text-muted">${formatDate(bestWeight.date)}</div>
+</div>
+</div>`;
+}).join('');
+
+container.innerHTML = prCards || '<div class="empty-state"><p>Complete workouts to track records</p></div>';
+}
+
+// ===== SETTINGS =====
+function refreshSettings() {
+document.getElementById('settingUnit').textContent = prefs.unit;
+const toggle = document.getElementById('settingRecToggle');
+toggle.classList.toggle('on', prefs.recsEnabled);
+dbGetAll('exercises').then(exs => {
+document.getElementById('settingExCount').textContent = `${exs.length} exercises`;
+});
+}
+
+async function toggleUnit() {
+prefs.unit = prefs.unit === 'kg' ? 'lb' : 'kg';
+await savePrefs();
+refreshSettings();
+toast(`Unit set to ${prefs.unit}`, 'info');
+}
+
+async function toggleRec() {
+prefs.recsEnabled = !prefs.recsEnabled;
+await savePrefs();
+refreshSettings();
+toast(prefs.recsEnabled ? 'Recommendations enabled' : 'Recommendations disabled', 'info');
+}
+
+// ===== EXERCISE LIBRARY =====
+async function showExerciseLibrary() {
+const exercises = await dbGetAll('exercises');
+const grouped = {};
+exercises.forEach(ex => {
+const mg = ex.muscleGroup || 'other';
+if (!grouped[mg]) grouped[mg] = [];
+grouped[mg].push(ex);
+});
+
+const mgLabels = { chest: 'Chest', back: 'Back', shoulders: 'Shoulders', side_delts: 'Side Delts', rear_delts: 'Rear Delts', quads: 'Quads', hamstrings: 'Hamstrings', glutes: 'Glutes', biceps: 'Biceps', triceps: 'Triceps', calves: 'Calves', core: 'Core', front_delts: 'Front Delts' };
+
+let html = '<div class="modal-title">Exercise Library</div>';
+html += '<div class="form-group"><input type="text" class="form-input" placeholder="Search exercises..." oninput="filterExLib(this.value)"></div>';
+
+Object.entries(grouped).sort().forEach(([mg, exs]) => {
+html += `<div class="settings-title mt-16">${mgLabels[mg] || mg}</div>`;
+exs.forEach(ex => {
+html += `<div class="exercise-pick-item ex-lib-item" data-name="${ex.name.toLowerCase()}" onclick="showExerciseDetail('${ex.id}')">
+<div><div class="fw-600 text-sm">${ex.name}</div><div class="exercise-pick-muscles">${ex.equipment || ''} · ${ex.type || ''}</div></div>
+</div>`;
+});
+});
+
+html += `<button class="btn btn-secondary btn-full mt-16" onclick="showAddCustomExercise()">+ Add Custom Exercise</button>`;
+showModal(html);
+}
+
+window.filterExLib = function(q) {
+const items = document.querySelectorAll('.ex-lib-item');
+items.forEach(item => {
+item.style.display = item.dataset.name.includes(q.toLowerCase()) ? '' : 'none';
+});
+};
+
+async function showExerciseDetail(id) {
+const ex = await dbGet('exercises', id);
+if (!ex) return;
+showModal(`
+<div class="modal-title">${ex.name}</div>
+<div class="stat-row"><span class="stat-label">Muscle group</span><span class="stat-value">${ex.muscleGroup}</span></div>
+<div class="stat-row"><span class="stat-label">Secondary</span><span class="stat-value">${(ex.secondary || []).join(', ') || 'None'}</span></div>
+<div class="stat-row"><span class="stat-label">Equipment</span><span class="stat-value">${ex.equipment || '—'}</span></div>
+<div class="stat-row"><span class="stat-label">Type</span><span class="stat-value">${ex.type || '—'}</span></div>
+<div class="modal-actions">
+<button class="btn btn-secondary" onclick="editExercise('${id}')">Edit</button>
+${ex.custom ? `<button class="btn btn-danger btn-sm" onclick="deleteExercise('${id}')">Delete</button>` : ''}
+<button class="btn btn-ghost" onclick="showExerciseLibrary()">Back</button>
+</div>
+`);
+}
+
+function showAddCustomExercise() {
+showModal(`
+<div class="modal-title">New Exercise</div>
+<div class="form-group">
+<label class="form-label">Name</label>
+<input type="text" class="form-input" id="newExName" placeholder="e.g. Dumbbell Row">
+</div>
+<div class="form-row">
+<div class="form-group">
+<label class="form-label">Muscle group</label>
+<select class="form-input" id="newExMG">
+<option value="chest">Chest</option><option value="back">Back</option>
+<option value="shoulders">Shoulders</option><option value="side_delts">Side Delts</option>
+<option value="rear_delts">Rear Delts</option><option value="quads">Quads</option>
+<option value="hamstrings">Hamstrings</option><option value="glutes">Glutes</option>
+<option value="biceps">Biceps</option><option value="triceps">Triceps</option>
+<option value="calves">Calves</option><option value="core">Core</option>
+</select>
+</div>
+<div class="form-group">
+<label class="form-label">Type</label>
+<select class="form-input" id="newExType">
+<option value="compound">Compound</option><option value="isolation">Isolation</option>
+</select>
+</div>
+</div>
+<div class="form-group">
+<label class="form-label">Equipment</label>
+<select class="form-input" id="newExEquip">
+<option value="barbell">Barbell</option><option value="dumbbell">Dumbbell</option>
+<option value="cable">Cable</option><option value="machine">Machine</option>
+<option value="bodyweight">Bodyweight</option><option value="other">Other</option>
+</select>
+</div>
+<div class="modal-actions">
+<button class="btn btn-primary" onclick="saveNewExercise()">Save</button>
+<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+</div>
+`);
+}
+
+async function saveNewExercise() {
+const name = document.getElementById('newExName')?.value?.trim();
+if (!name) { toast('Name required', 'error'); return; }
+const ex = {
+id: 'ex_' + uid(),
+name,
+muscleGroup: document.getElementById('newExMG').value,
+secondary: [],
+equipment: document.getElementById('newExEquip').value,
+type: document.getElementById('newExType').value,
+custom: true,
+createdAt: Date.now(),
+};
+await dbPut('exercises', ex);
+exerciseCache[ex.id] = ex;
+toast('Exercise created', 'success');
+closeModal();
+}
+
+async function editExercise(id) {
+const ex = await dbGet('exercises', id);
+if (!ex) return;
+showModal(`
+<div class="modal-title">Edit Exercise</div>
+<div class="form-group">
+<label class="form-label">Name</label>
+<input type="text" class="form-input" id="editExName" value="${ex.name}">
+</div>
+<div class="form-group">
+<label class="form-label">Muscle group</label>
+<select class="form-input" id="editExMG">
+${['chest','back','shoulders','side_delts','rear_delts','quads','hamstrings','glutes','biceps','triceps','calves','core']
+.map(mg => `<option value="${mg}" ${mg === ex.muscleGroup ? 'selected' : ''}>${mg}</option>`).join('')}
+</select>
+</div>
+<div class="form-group">
+<label class="form-label">Equipment</label>
+<select class="form-input" id="editExEquip">
+${['barbell','dumbbell','cable','machine','bodyweight','other']
+.map(eq => `<option value="${eq}" ${eq === ex.equipment ? 'selected' : ''}>${eq}</option>`).join('')}
+</select>
+</div>
+<div class="modal-actions">
+<button class="btn btn-primary" onclick="saveExerciseEdit('${id}')">Save</button>
+<button class="btn btn-secondary" onclick="showExerciseDetail('${id}')">Cancel</button>
+</div>
+`);
+}
+
+async function saveExerciseEdit(id) {
+const ex = await dbGet('exercises', id);
+if (!ex) return;
+const name = document.getElementById('editExName')?.value?.trim();
+if (!name) { toast('Name required', 'error'); return; }
+ex.name = name;
+ex.muscleGroup = document.getElementById('editExMG').value;
+ex.equipment = document.getElementById('editExEquip').value;
+ex.updatedAt = Date.now();
+await dbPut('exercises', ex);
+exerciseCache[ex.id] = ex;
+toast('Exercise updated', 'success');
+closeModal();
+}
+
+async function deleteExercise(id) {
+if (!confirm('Delete this exercise? It will be removed from the library but not from historical records.')) return;
+await dbDelete('exercises', id);
+delete exerciseCache[id];
+toast('Exercise deleted', 'success');
+closeModal();
+refreshSettings();
+}
+
+// ===== BACKUP & RESTORE =====
+async function exportBackup() {
+try {
+const data = {
+version: 1,
+exportDate: new Date().toISOString(),
+exercises: await dbGetAll('exercises'),
+templates: await dbGetAll('templates'),
+sessions: await dbGetAll('sessions'),
+preferences: await dbGetAll('preferences'),
+recommendations: await dbGetAll('recommendations'),
+};
+const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = `liftlog-backup-${new Date().toISOString().slice(0, 10)}.json`;
+a.click();
+URL.revokeObjectURL(url);
+toast(`Backup exported: ${data.sessions.length} sessions, ${data.exercises.length} exercises`, 'success');
+} catch (e) {
+toast('Export failed: ' + e.message, 'error');
+}
+}
+
+async function exportCSV() {
+try {
+const sessions = await dbGetAll('sessions');
+const completed = sessions.filter(s => s.status === 'completed').sort((a, b) => a.date - b.date);
+if (completed.length === 0) { toast('No completed workouts', 'error'); return; }
+
+let csv = 'Date,Workout,Exercise,Set,Weight,Unit,Reps,Warmup\n';
+completed.forEach(s => {
+const date = new Date(s.date).toISOString().slice(0, 10);
+s.exercises?.forEach(ex => {
+let setNum = 0;
+ex.sets?.forEach(set => {
+if (set.completed) {
+setNum++;
+csv += `${date},"${s.templateName || 'Workout'}","${ex.exerciseName}",${setNum},${set.weight ?? ''},${prefs.unit},${set.reps ?? ''},${set.isWarmup ? 'Yes' : 'No'}\n`;
+}
+});
+});
+});
+
+const blob = new Blob([csv], { type: 'text/csv' });
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = `liftlog-history-${new Date().toISOString().slice(0, 10)}.csv`;
+a.click();
+URL.revokeObjectURL(url);
+toast('CSV exported', 'success');
+} catch (e) {
+toast('Export failed: ' + e.message, 'error');
+}
+}
+
+async function importBackup(event) {
+const file = event.target.files[0];
+if (!file) return;
+event.target.value = '';
+
+try {
+const text = await file.text();
+const data = JSON.parse(text);
+
+// Validate
+if (!data.exercises || !data.templates || !data.sessions) {
+toast('Invalid backup file: missing required data', 'error');
+return;
+}
+if (!Array.isArray(data.exercises) || !Array.isArray(data.templates) || !Array.isArray(data.sessions)) {
+toast('Invalid backup file: incorrect data format', 'error');
+return;
+}
+
+const summary = `Import ${data.exercises.length} exercises, ${data.templates.length} templates, ${data.sessions.length} sessions?\n\nThis will replace all existing data.`;
+if (!confirm(summary)) return;
+
+// Clear and restore
+await dbClear('exercises');
+await dbClear('templates');
+await dbClear('sessions');
+await dbClear('preferences');
+await dbClear('recommendations');
+
+for (const ex of data.exercises) await dbPut('exercises', ex);
+for (const tpl of data.templates) await dbPut('templates', tpl);
+for (const sess of data.sessions) await dbPut('sessions', sess);
+if (data.preferences) for (const p of data.preferences) await dbPut('preferences', p);
+if (data.recommendations) for (const r of data.recommendations) await dbPut('recommendations', r);
+
+await loadPrefs();
+await loadExerciseCache();
+toast(`Imported: ${data.exercises.length} exercises, ${data.templates.length} templates, ${data.sessions.length} sessions`, 'success');
+navigate('home');
+} catch (e) {
+toast('Import failed: ' + e.message, 'error');
+}
+}
+
+async function confirmClearData() {
+if (!confirm('Delete ALL data? This cannot be undone. Have you exported a backup?')) return;
+if (!confirm('Are you absolutely sure? All workouts, exercises, and templates will be permanently deleted.')) return;
+await dbClear('exercises');
+await dbClear('templates');
+await dbClear('sessions');
+await dbClear('preferences');
+await dbClear('recommendations');
+prefs = { unit: 'kg', recsEnabled: true, onboardingDone: false, equipment: 'gym' };
+await seedDefaults();
+await loadExerciseCache();
+toast('All data cleared', 'info');
+navigate('home');
+}
+
+// ===== INITIALIZATION =====
+async function init() {
+try {
+await openDB();
+await seedDefaults();
+await loadPrefs();
+await loadExerciseCache();
+
+// Check for active session on load
+const active = await getActiveSession();
+if (active) {
+activeSession = active;
+}
+
+refreshHome();
+} catch (e) {
+console.error('Init error:', e);
+toast('Failed to initialize: ' + e.message, 'error');
+}
+}
+
+// Handle visibility changes for session recovery
+document.addEventListener('visibilitychange', async () => {
+if (document.visibilityState === 'visible' && currentPage === 'active') {
+const active = await getActiveSession();
+if (active) {
+activeSession = active;
+renderActiveWorkout();
+startElapsedTimer();
+}
+}
+});
+
+// Service worker registration
+if ('serviceWorker' in navigator) {
+window.addEventListener('load', () => {
+navigator.serviceWorker.register('sw.js').catch(e => console.log('SW registration failed:', e));
+});
+}
+
+// Start
+init();
+</script>
+</div>
+
+</body>
+</html>
